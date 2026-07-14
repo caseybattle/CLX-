@@ -1,0 +1,41 @@
+//@version=5
+strategy("RSI-2 Mean Reversion (200SMA filter / 5SMA exit)", overlay=true,
+     default_qty_type=strategy.cash, default_qty_value=25000, initial_capital=25000)
+
+// ---- Inputs (fill these in to match whatever you're testing) ----
+rsiLength     = input.int(2, "RSI Length")
+rsiEntryLevel = input.float(10, "Enter long when RSI drops below")
+trendSmaLen   = input.int(200, "Trend filter SMA length")
+exitSmaLen    = input.int(5, "Exit SMA length")
+orderUnits    = input.int(1000, "Units to send in webhook alert (informational only)")
+oandaInstrument = input.string("EUR_USD", "OANDA instrument (must match webhook payload)")
+
+// ---- Indicators ----
+rsiValue  = ta.rsi(close, rsiLength)
+trendSma  = ta.sma(close, trendSmaLen)
+exitSma   = ta.sma(close, exitSmaLen)
+
+longCondition  = rsiValue < rsiEntryLevel and close > trendSma
+exitCondition  = close > exitSma
+
+// ---- Strategy Tester orders (Phase 1: pure backtest, no live orders) ----
+if longCondition
+    strategy.entry("Long", strategy.long)
+
+if exitCondition
+    strategy.close("Long")
+
+plot(trendSma, "200 SMA", color=color.orange)
+plot(exitSma, "5 SMA", color=color.blue)
+
+// ---- Alerts (Phase 2: wire these up to the webhook bridge once backtest looks good) ----
+// Create a TradingView alert on this script with condition "Any alert() function call" and
+// paste the corresponding JSON below into the alert's "Message" box, replacing WEBHOOK_SECRET
+// with the value you set in .env. The {{ }} placeholders are filled in by TradingView.
+if longCondition
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"buy","units":' + str.tostring(orderUnits) + '}', alert.freq_once_per_bar_close)
+
+if exitCondition
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"close_all","units":0}', alert.freq_once_per_bar_close)

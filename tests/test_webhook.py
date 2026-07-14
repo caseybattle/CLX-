@@ -1,0 +1,83 @@
+import pytest
+from fastapi.testclient import TestClient
+
+from server import main
+
+
+@pytest.fixture
+def client():
+    return TestClient(main.app)
+
+
+@pytest.fixture(autouse=True)
+def stub_oanda(monkeypatch):
+    calls = {}
+
+    def fake_place_market_order(self, instrument, units):
+        calls["place_market_order"] = (instrument, units)
+        return {"orderFillTransaction": {"id": "1"}}
+
+    def fake_close_position(self, instrument):
+        calls["close_position"] = (instrument,)
+        return {"longOrderFillTransaction": {"id": "2"}}
+
+    monkeypatch.setattr(main.OandaClient, "place_market_order", fake_place_market_order)
+    monkeypatch.setattr(main.OandaClient, "close_position", fake_close_position)
+    return calls
+
+
+def test_health_check(client):
+    resp = client.get("/health")
+    assert resp.status_code == 200
+    assert resp.json()["status"] == "ok"
+
+
+def test_rejects_wrong_secret(client):
+    resp = client.post(
+        "/webhook",
+        json={"secret": "wrong", "instrument": "EUR_USD", "action": "buy", "units": 1000},
+    )
+    assert resp.status_code == 401
+
+
+def test_rejects_unknown_action(client):
+    resp = client.post(
+        "/webhook",
+        json={"secret": "test-secret", "instrument": "EUR_USD", "action": "yolo", "units": 1000},
+    )
+    assert resp.status_code == 400
+
+
+def test_rejects_units_over_cap(client):
+    resp = client.post(
+        "/webhook",
+        json={"secret": "test-secret", "instrument": "EUR_USD", "action": "buy", "units": 999999},
+    )
+    assert resp.status_code == 400
+
+
+def test_buy_places_positive_units_order(client, stub_oanda):
+    resp = client.post(
+        "/webhook",
+        json={"secret": "test-secret", "instrument": "EUR_USD", "action": "buy", "units": 1000},
+    )
+    assert resp.status_code == 200
+    assert stub_oanda["place_market_order"] == ("EUR_USD", 1000)
+
+
+def test_sell_places_negative_units_order(client, stub_oanda):
+    resp = client.post(
+        "/webhook",
+        json={"secret": "test-secret", "instrument": "EUR_USD", "action": "sell", "units": 1000},
+    )
+    assert resp.status_code == 200
+    assert stub_oanda["place_market_order"] == ("EUR_USD", -1000)
+
+
+def test_close_all_closes_position(client, stub_oanda):
+    resp = client.post(
+        "/webhook",
+        json={"secret": "test-secret", "instrument": "EUR_USD", "action": "close_all", "units": 0},
+    )
+    assert resp.status_code == 200
+    assert stub_oanda["close_position"] == ("EUR_USD",)
