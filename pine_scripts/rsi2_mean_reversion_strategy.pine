@@ -133,7 +133,10 @@ isFlat  = strategy.position_size == 0
 
 // ---- Safety gates ----
 hourNY = hour(time, "America/New_York")
-sessionOk = not useSessionFilter or (hourNY >= sessStartHour and hourNY <= sessEndHour)
+inSessionWindow = sessStartHour <= sessEndHour ?
+     (hourNY >= sessStartHour and hourNY <= sessEndHour) :
+     (hourNY >= sessStartHour or hourNY <= sessEndHour)
+sessionOk = not useSessionFilter or inSessionWindow
 
 volSpike = not na(atrBase) and atrValue > volSpikeMult * atrBase
 var int lastSpikeBar = na
@@ -141,11 +144,15 @@ if volSpike
     lastSpikeBar := bar_index
 volOk = not useVolBreaker or (not volSpike and (na(lastSpikeBar) or bar_index - lastSpikeBar >= volCooldownBars))
 
+// Walk every close since the last check (a partial and a full exit can land on the
+// same bar) and skip the "partial" fills so the streak counts whole trades — otherwise
+// a profitable half-exit would reset the streak even when the remainder stops out.
 var int consecLosses = 0
 var int seenTrades = 0
 if strategy.closedtrades > seenTrades
-    lastProfit = strategy.closedtrades.profit(strategy.closedtrades - 1)
-    consecLosses := lastProfit < 0 ? consecLosses + 1 : 0
+    for i = seenTrades to strategy.closedtrades - 1
+        if strategy.closedtrades.exit_comment(i) != "partial"
+            consecLosses := strategy.closedtrades.profit(i) < 0 ? consecLosses + 1 : 0
     seenTrades := strategy.closedtrades
 var int brakeBar = na
 if useStreakBrake and consecLosses >= maxConsecLosses
@@ -233,7 +240,7 @@ if flagShortSignal
     tpPrice    := close - bearPoleSize
     tradeType  := "flag"
     activeId   := "FlagShort"
-    liveUnits  := tradeType == "flag" and flagShortSignal ? flagShortUnitsCalc : liveUnits
+    liveUnits  := flagShortUnitsCalc
 anyEntrySignal = longEntrySignal or shortEntrySignal or flagLongSignal or flagShortSignal
 if anyEntrySignal
     initRisk    := math.abs(close - stopPrice)
@@ -341,7 +348,19 @@ var int entryBar  = na
 if anyEntrySignal
     entryBar := bar_index
 
+// When the trade closes, fade the overlay instead of deleting it — it stays as a
+// reference to the last trade's levels but no longer reads like a live position.
 activeTrade = inLong or inShort or anyEntrySignal
+if isFlat and (inLong[1] or inShort[1])
+    if not na(entryLn)
+        line.set_color(entryLn, color.new(color.gray, 70))
+        label.set_color(entryLb, color.new(color.gray, 70))
+    if not na(slLn)
+        line.set_color(slLn, color.new(color.red, 70))
+        label.set_color(slLb, color.new(color.red, 70))
+    if not na(tpLn)
+        line.set_color(tpLn, color.new(color.teal, 70))
+        label.set_color(tpLb, color.new(color.teal, 70))
 if showLevels and activeTrade and not na(entryBar)
     line.delete(entryLn)
     line.delete(slLn)
