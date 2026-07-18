@@ -13,8 +13,8 @@ def client():
 def stub_oanda(monkeypatch):
     calls = {}
 
-    def fake_place_market_order(self, instrument, units):
-        calls["place_market_order"] = (instrument, units)
+    def fake_place_market_order(self, instrument, units, stop_loss=None, take_profit=None):
+        calls["place_market_order"] = (instrument, units, stop_loss, take_profit)
         return {"orderFillTransaction": {"id": "1"}}
 
     def fake_close_position(self, instrument):
@@ -62,7 +62,7 @@ def test_buy_places_positive_units_order(client, stub_oanda):
         json={"secret": "test-secret", "instrument": "EUR_USD", "action": "buy", "units": 1000},
     )
     assert resp.status_code == 200
-    assert stub_oanda["place_market_order"] == ("EUR_USD", 1000)
+    assert stub_oanda["place_market_order"] == ("EUR_USD", 1000, None, None)
 
 
 def test_sell_places_negative_units_order(client, stub_oanda):
@@ -71,7 +71,37 @@ def test_sell_places_negative_units_order(client, stub_oanda):
         json={"secret": "test-secret", "instrument": "EUR_USD", "action": "sell", "units": 1000},
     )
     assert resp.status_code == 200
-    assert stub_oanda["place_market_order"] == ("EUR_USD", -1000)
+    assert stub_oanda["place_market_order"] == ("EUR_USD", -1000, None, None)
+
+
+def test_buy_passes_stop_loss_and_take_profit(client, stub_oanda):
+    resp = client.post(
+        "/webhook",
+        json={
+            "secret": "test-secret",
+            "instrument": "EUR_USD",
+            "action": "buy",
+            "units": 1000,
+            "stop_loss": 1.1210,
+            "take_profit": 1.1590,
+        },
+    )
+    assert resp.status_code == 200
+    assert stub_oanda["place_market_order"] == ("EUR_USD", 1000, 1.1210, 1.1590)
+
+
+def test_rejects_non_positive_price_levels(client):
+    resp = client.post(
+        "/webhook",
+        json={
+            "secret": "test-secret",
+            "instrument": "EUR_USD",
+            "action": "buy",
+            "units": 1000,
+            "stop_loss": -1.5,
+        },
+    )
+    assert resp.status_code == 400
 
 
 def test_close_all_closes_position(client, stub_oanda):

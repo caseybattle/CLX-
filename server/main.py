@@ -26,12 +26,21 @@ class AlertPayload(BaseModel):
     instrument: str
     action: str
     units: int = 0
+    stop_loss: float | None = None
+    take_profit: float | None = None
 
     @field_validator("action")
     @classmethod
     def action_must_be_known(cls, v: str) -> str:
         if v not in ALLOWED_ACTIONS:
             raise ValueError(f"action must be one of {sorted(ALLOWED_ACTIONS)}")
+        return v
+
+    @field_validator("stop_loss", "take_profit")
+    @classmethod
+    def price_levels_must_be_positive(cls, v: float | None) -> float | None:
+        if v is not None and v <= 0:
+            raise ValueError("price levels must be positive")
         return v
 
 
@@ -72,9 +81,15 @@ async def webhook(request: Request):
 
     try:
         if payload.action == "buy":
-            result = oanda.place_market_order(payload.instrument, units)
+            result = oanda.place_market_order(
+                payload.instrument, units,
+                stop_loss=payload.stop_loss, take_profit=payload.take_profit,
+            )
         elif payload.action == "sell":
-            result = oanda.place_market_order(payload.instrument, -units)
+            result = oanda.place_market_order(
+                payload.instrument, -units,
+                stop_loss=payload.stop_loss, take_profit=payload.take_profit,
+            )
         else:  # close_all
             result = oanda.close_position(payload.instrument)
     except OandaError as exc:

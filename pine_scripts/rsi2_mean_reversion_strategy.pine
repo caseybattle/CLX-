@@ -1,6 +1,6 @@
 //@version=5
 strategy("RSI-2 Mean Reversion (200SMA filter / 5SMA exit)", overlay=true,
-     default_qty_type=strategy.cash, default_qty_value=25000, initial_capital=25000,
+     default_qty_type=strategy.fixed, default_qty_value=10000, initial_capital=25000,
      pyramiding=0, process_orders_on_close=true)
 
 // ---- Strategy inputs ----
@@ -14,48 +14,92 @@ enableShorts  = input.bool(false, "Enable short side (mirror of long rules)", gr
              "cover when price closes back below the exit SMA. Off by default — prove out the long " +
              "side first. Keeps a single net position, so it stays compatible with OANDA US FIFO rules.")
 
+grpRisk = "Risk (ATR stop / target)"
+atrLength     = input.int(14, "ATR length", group=grpRisk)
+useStopLoss   = input.bool(true, "Use ATR stop loss", group=grpRisk)
+slAtrMult     = input.float(2.5, "Stop loss distance (ATR multiples)", step=0.1, group=grpRisk,
+     tooltip="Mean reversion needs breathing room — a tight stop turns winners into losers. " +
+             "The stop is also sent to OANDA as a real stop-loss order attached to the fill.")
+useTakeProfit = input.bool(true, "Use ATR take profit", group=grpRisk)
+tpAtrMult     = input.float(2.5, "Take profit distance (ATR multiples)", step=0.1, group=grpRisk,
+     tooltip="Also sent to OANDA as a real take-profit order. The 5-SMA exit stays active too — " +
+             "whichever is reached first closes the trade.")
+
 grpWebhook = "Webhook"
-orderUnits      = input.int(1000, "Units to send in webhook alert", group=grpWebhook)
+orderUnits      = input.int(10000, "Order size in units (backtest AND webhook)", group=grpWebhook,
+     tooltip="Used for both the Strategy Tester position size and the webhook alert, so the " +
+             "backtest PnL matches what OANDA would actually trade. If you raise this above " +
+             "10000, raise MAX_ORDER_UNITS in the server's .env to match or orders will be rejected.")
 oandaInstrument = input.string("EUR_USD", "OANDA instrument (must match webhook payload)", group=grpWebhook)
 
 grpDisplay = "Display"
 showSmas      = input.bool(true, "Show SMAs", group=grpDisplay)
 showSignals   = input.bool(true, "Show entry/exit markers", group=grpDisplay)
+showLevels    = input.bool(true, "Show entry / stop / target lines", group=grpDisplay)
 shadePosition = input.bool(true, "Shade background while in a position", group=grpDisplay)
 
 // ---- Indicators ----
 rsiValue = ta.rsi(close, rsiLength)
 trendSma = ta.sma(close, trendSmaLen)
 exitSma  = ta.sma(close, exitSmaLen)
+atrValue = ta.atr(atrLength)
 
-// ---- Signals ----
-// Every signal is gated on the current position so it fires exactly once per trade.
-// Without this gate the exit condition (close > 5 SMA) is true on most bars of an
-// uptrend, flooding the chart with markers and the webhook with no-op close_all alerts.
+// ---- Position state ----
 inLong  = strategy.position_size > 0
 inShort = strategy.position_size < 0
 isFlat  = strategy.position_size == 0
 
+// ---- Signals ----
+// Every signal is gated on the current position so it fires exactly once per trade.
 longEntrySignal  = isFlat and rsiValue < rsiEntryLevel and close > trendSma
-longExitSignal   = inLong and close > exitSma
 shortEntrySignal = enableShorts and isFlat and rsiValue > (100 - rsiEntryLevel) and close < trendSma
-shortExitSignal  = inShort and close < exitSma
+
+// Entry / stop / target levels, fixed at the moment of entry.
+var float entryPrice = na
+var float stopPrice  = na
+var float tpPrice    = na
+if longEntrySignal
+    entryPrice := close
+    stopPrice  := close - slAtrMult * atrValue
+    tpPrice    := close + tpAtrMult * atrValue
+if shortEntrySignal
+    entryPrice := close
+    stopPrice  := close + slAtrMult * atrValue
+    tpPrice    := close - tpAtrMult * atrValue
+
+// Exits are evaluated on bar close (same moment the webhook alert fires) so the
+// tester matches live behavior. OANDA additionally holds the hard stop/target from
+// the entry order, which protects the position between bar closes.
+longStopHit    = useStopLoss and inLong and close <= stopPrice
+longTpHit      = useTakeProfit and inLong and close >= tpPrice
+longExitSignal = inLong and (close > exitSma or longStopHit or longTpHit)
+
+shortStopHit    = useStopLoss and inShort and close >= stopPrice
+shortTpHit      = useTakeProfit and inShort and close <= tpPrice
+shortExitSignal = inShort and (close < exitSma or shortStopHit or shortTpHit)
 
 // ---- Strategy Tester orders (Phase 1: pure backtest, no live orders) ----
-// process_orders_on_close makes the tester fill at the bar close — the same moment the
-// alert() below fires — so backtest trades line up with what the webhook would do live.
 if longEntrySignal
-    strategy.entry("Long", strategy.long)
+    strategy.entry("Long", strategy.long, qty=orderUnits)
 if longExitSignal
     strategy.close("Long")
 if shortEntrySignal
-    strategy.entry("Short", strategy.short)
+    strategy.entry("Short", strategy.short, qty=orderUnits)
 if shortExitSignal
     strategy.close("Short")
 
 // ---- Plots ----
 plot(showSmas ? trendSma : na, "Trend SMA", color=color.orange, linewidth=2)
 plot(showSmas ? exitSma : na, "Exit SMA", color=color.new(color.blue, 30))
+
+showFrom = inLong or inShort or longEntrySignal or shortEntrySignal
+plot(showLevels and showFrom ? entryPrice : na, "Entry price", color=color.gray,
+     style=plot.style_linebr)
+plot(showLevels and showFrom and useStopLoss ? stopPrice : na, "Stop loss", color=color.red,
+     style=plot.style_linebr, linewidth=2)
+plot(showLevels and showFrom and useTakeProfit ? tpPrice : na, "Take profit", color=color.teal,
+     style=plot.style_linebr, linewidth=2)
+
 plotshape(showSignals and longEntrySignal, "Long entry", style=shape.triangleup,
      location=location.belowbar, color=color.green, size=size.small)
 plotshape(showSignals and longExitSignal, "Long exit", style=shape.xcross,
@@ -70,17 +114,22 @@ bgcolor(shadePosition and inLong ? color.new(color.green, 92) :
 // ---- Alerts (Phase 2: wire these up to the webhook bridge once backtest looks good) ----
 // Create a TradingView alert on this script with condition "Any alert() function call".
 // Replace WEBHOOK_SECRET below with the value from your .env before creating the alert.
-// Because the signals above are position-gated, each trade produces exactly one entry
-// alert and one close_all alert — no repeats while a position is open or flat.
+// Entry alerts include the stop/target prices so the server can attach real stop-loss
+// and take-profit orders at OANDA — protection lives at the broker, not just on the chart.
+slJson = useStopLoss ? ',"stop_loss":' + str.tostring(stopPrice, "#.#####") : ""
+tpJson = useTakeProfit ? ',"take_profit":' + str.tostring(tpPrice, "#.#####") : ""
+
 if longEntrySignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
-         '","action":"buy","units":' + str.tostring(orderUnits) + '}', alert.freq_once_per_bar_close)
+         '","action":"buy","units":' + str.tostring(orderUnits) + slJson + tpJson + '}',
+         alert.freq_once_per_bar_close)
 if longExitSignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
          '","action":"close_all","units":0}', alert.freq_once_per_bar_close)
 if shortEntrySignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
-         '","action":"sell","units":' + str.tostring(orderUnits) + '}', alert.freq_once_per_bar_close)
+         '","action":"sell","units":' + str.tostring(orderUnits) + slJson + tpJson + '}',
+         alert.freq_once_per_bar_close)
 if shortExitSignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
          '","action":"close_all","units":0}', alert.freq_once_per_bar_close)
