@@ -236,15 +236,17 @@ var int entryBar  = na
 if anyEntrySignal
     entryBar := bar_index
 
-line.delete(entryLn)
-line.delete(slLn)
-line.delete(tpLn)
-label.delete(entryLb)
-label.delete(slLb)
-label.delete(tpLb)
-
+// Redraw while a trade is active; when it closes, the last drawing stays on the
+// chart (labeled entry/stop/target of the most recent trade) until a new trade
+// replaces it — so there is always a visible overlay, even on a flat weekend chart.
 activeTrade = inLong or inShort or anyEntrySignal
 if showLevels and activeTrade and not na(entryBar)
+    line.delete(entryLn)
+    line.delete(slLn)
+    line.delete(tpLn)
+    label.delete(entryLb)
+    label.delete(slLb)
+    label.delete(tpLb)
     endX = bar_index + 8
     entryLn := line.new(entryBar, entryPrice, endX, entryPrice,
          color=color.new(color.gray, 0), width=1, style=line.style_dashed)
