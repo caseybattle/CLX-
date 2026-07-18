@@ -59,19 +59,29 @@ useStreakBrake = input.bool(true, "Pause after a losing streak / deep drawdown",
              "equity recovers — the mechanical version of stepping away from the desk.")
 maxConsecLosses = input.int(5, "Consecutive losses before pausing", group=grpFilters)
 brakeCooldownBars = input.int(48, "Bars to pause after a streak", group=grpFilters)
-ddBrakePct    = input.float(15.0, "Halt entries at % drawdown from equity peak", step=1.0, group=grpFilters)
+ddBrakePct    = input.float(15.0, "Pause entries at % drawdown from equity peak", step=1.0, group=grpFilters)
+ddCooldownBars = input.int(400, "Bars to pause after a drawdown breach", group=grpFilters,
+     tooltip="Once flat, equity can only recover by trading again, so the drawdown pause " +
+             "releases after this many bars and the equity peak resets — otherwise the halt " +
+             "would be permanent.")
 
 // ---- Risk & sizing ----
 grpRisk = "Risk & sizing"
 sizingMode = input.string("Risk % of equity", "Position sizing", group=grpRisk,
      options=["Risk % of equity", "Fixed units"])
-riskPct       = input.float(2.0, "Risk per trade (% of equity)", step=0.5, group=grpRisk)
+riskPct       = input.float(2.0, "Risk per trade (% of equity)", step=0.5, group=grpRisk,
+     tooltip="IMPORTANT: live order sizes are computed from the Strategy Tester's simulated " +
+             "equity, so set the chart's initial capital (strategy Properties) to your real " +
+             "account balance to make live risk match. Sizing math assumes a USD account " +
+             "trading a *_USD pair like EUR_USD; other pairs will size conservatively wrong.")
 atrLength     = input.int(14, "ATR length", group=grpRisk)
 useStopLoss   = input.bool(true, "Use ATR stop loss (mean-reversion trades)", group=grpRisk)
 slAtrMult     = input.float(2.5, "Stop loss distance (ATR multiples)", step=0.1, group=grpRisk)
 useTakeProfit = input.bool(true, "Use ATR take profit (mean-reversion trades)", group=grpRisk)
-tpAtrMult     = input.float(2.5, "Take profit distance (ATR multiples)", step=0.1, group=grpRisk,
-     tooltip="Flag trades ignore these toggles and always use their structural stop/target.")
+tpAtrMult     = input.float(4.0, "Take profit distance (ATR multiples)", step=0.1, group=grpRisk,
+     tooltip="Flag trades ignore these toggles and always use their structural stop/target. " +
+             "Keep this above the stop distance so the +1R partial/breakeven management can " +
+             "happen before the target — if target and 1R coincide, the management never fires.")
 
 // ---- Trade management ----
 grpMgmt = "Trade management"
@@ -160,9 +170,18 @@ if useStreakBrake and consecLosses >= maxConsecLosses
     consecLosses := 0
 brakeActive = useStreakBrake and not na(brakeBar) and bar_index - brakeBar < brakeCooldownBars
 
+// Drawdown pause with a timed release: once flat, equity is frozen until the next
+// trade, so a pause conditioned only on "equity recovers" would deadlock forever.
 var float eqPeak = 0.0
+var int ddBar = na
 eqPeak := math.max(eqPeak, strategy.equity)
-ddActive = useStreakBrake and strategy.equity < eqPeak * (1 - ddBrakePct / 100.0)
+ddBreach = useStreakBrake and strategy.equity < eqPeak * (1 - ddBrakePct / 100.0)
+if ddBreach and na(ddBar)
+    ddBar := bar_index
+ddActive = not na(ddBar) and bar_index - ddBar < ddCooldownBars
+if not na(ddBar) and bar_index - ddBar >= ddCooldownBars
+    ddBar := na
+    eqPeak := strategy.equity
 
 entryGate = sessionOk and volOk and not brakeActive and not ddActive
 
@@ -247,23 +266,6 @@ if anyEntrySignal
     movedBE     := false
     tookPartial := false
 
-// ---- Trade management: partial profit + breakeven (evaluated on bar close) ----
-partialNow = false
-beNow = false
-partialUnits = 0
-if (inLong or inShort) and not na(initRisk) and initRisk > 0
-    rr = ((close - entryPrice) * (inLong ? 1 : -1)) / initRisk
-    if usePartial and not tookPartial and rr >= partialAtR and math.abs(strategy.position_size) > 1
-        strategy.close(activeId, qty_percent=50, comment="partial")
-        partialUnits := math.max(1, math.floor(liveUnits / 2))
-        liveUnits := liveUnits - partialUnits
-        tookPartial := true
-        partialNow := true
-    if useBreakeven and not movedBE and rr >= beAtR
-        stopPrice := entryPrice
-        movedBE := true
-        beNow := true
-
 // ---- Exits (evaluated on bar close, matching webhook alert timing) ----
 longStopHit  = inLong and close <= stopPrice and (useStopLoss or tradeType == "flag" or movedBE)
 longTpHit    = inLong and close >= tpPrice and (useTakeProfit or tradeType == "flag")
@@ -272,6 +274,27 @@ shortTpHit   = inShort and close <= tpPrice and (useTakeProfit or tradeType == "
 
 longExitSignal  = inLong and ((tradeType == "mr" and close > exitSma) or longStopHit or longTpHit)
 shortExitSignal = inShort and ((tradeType == "mr" and close < exitSma) or shortStopHit or shortTpHit)
+
+// ---- Trade management: partial profit + breakeven ----
+// Runs after exit evaluation and is skipped on exit bars, so a target/stop close
+// can't also emit partial or breakeven alerts in the same instant — those would
+// race at the broker and error against a freshly flat account.
+partialNow = false
+beNow = false
+partialUnits = 0
+exitingThisBar = longExitSignal or shortExitSignal
+if (inLong or inShort) and not exitingThisBar and not na(initRisk) and initRisk > 0
+    rr = ((close - entryPrice) * (inLong ? 1 : -1)) / initRisk
+    if usePartial and not tookPartial and rr >= partialAtR and math.abs(strategy.position_size) > 1
+        strategy.close(activeId, qty_percent=50, comment="partial")
+        partialUnits := math.max(1, math.round(liveUnits / 2))
+        liveUnits := liveUnits - partialUnits
+        tookPartial := true
+        partialNow := true
+    if useBreakeven and not movedBE and rr >= beAtR
+        stopPrice := entryPrice
+        movedBE := true
+        beNow := true
 
 // ---- Strategy Tester orders ----
 if longEntrySignal

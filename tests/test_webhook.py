@@ -29,10 +29,14 @@ def stub_oanda(monkeypatch):
         calls["set_trade_stop"] = (instrument, stop_loss)
         return {"modified": [{"id": "4"}]}
 
+    def fake_has_open_position(self, instrument):
+        return calls.get("open_position", False)
+
     monkeypatch.setattr(main.OandaClient, "place_market_order", fake_place_market_order)
     monkeypatch.setattr(main.OandaClient, "close_position", fake_close_position)
     monkeypatch.setattr(main.OandaClient, "close_position_partial", fake_close_position_partial)
     monkeypatch.setattr(main.OandaClient, "set_trade_stop", fake_set_trade_stop)
+    monkeypatch.setattr(main.OandaClient, "has_open_position", fake_has_open_position)
     return calls
 
 
@@ -98,6 +102,16 @@ def test_buy_passes_stop_loss_and_take_profit(client, stub_oanda):
     )
     assert resp.status_code == 200
     assert stub_oanda["place_market_order"] == ("EUR_USD", 1000, 1.1210, 1.1590)
+
+
+def test_rejects_entry_when_position_already_open(client, stub_oanda):
+    stub_oanda["open_position"] = True
+    resp = client.post(
+        "/webhook",
+        json={"secret": "test-secret", "instrument": "EUR_USD", "action": "buy", "units": 1000},
+    )
+    assert resp.status_code == 409
+    assert "place_market_order" not in stub_oanda
 
 
 def test_close_partial_routes_units(client, stub_oanda):

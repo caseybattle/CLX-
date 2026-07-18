@@ -87,6 +87,19 @@ async def webhook(request: Request):
     )
 
     try:
+        # Refuse blind entries: if a position is already open (e.g. the strategy and
+        # the broker desynced after an intrabar stop-out or a lost alert), stacking a
+        # second tranche would create a position size the backtest never models.
+        if payload.action in ("buy", "sell") and oanda.has_open_position(payload.instrument):
+            logger.warning(
+                "Rejected %s: position already open for instrument=%s",
+                payload.action,
+                payload.instrument,
+            )
+            raise HTTPException(
+                status_code=409,
+                detail="position already open for instrument; close it before re-entering",
+            )
         if payload.action == "buy":
             result = oanda.place_market_order(
                 payload.instrument, units,
