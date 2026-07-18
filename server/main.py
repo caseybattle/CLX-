@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("webhook")
 
-ALLOWED_ACTIONS = {"buy", "sell", "close_all"}
+ALLOWED_ACTIONS = {"buy", "sell", "close_all", "close_partial", "modify_stop"}
 
 app = FastAPI(title="TradingView -> OANDA webhook bridge")
 settings = Settings()
@@ -26,12 +26,21 @@ class AlertPayload(BaseModel):
     instrument: str
     action: str
     units: int = 0
+    stop_loss: float | None = None
+    take_profit: float | None = None
 
     @field_validator("action")
     @classmethod
     def action_must_be_known(cls, v: str) -> str:
         if v not in ALLOWED_ACTIONS:
             raise ValueError(f"action must be one of {sorted(ALLOWED_ACTIONS)}")
+        return v
+
+    @field_validator("stop_loss", "take_profit")
+    @classmethod
+    def price_levels_must_be_positive(cls, v: float | None) -> float | None:
+        if v is not None and v <= 0:
+            raise ValueError("price levels must be positive")
         return v
 
 
@@ -53,7 +62,14 @@ async def webhook(request: Request):
         logger.warning("Rejected alert with invalid secret for instrument=%s", payload.instrument)
         raise HTTPException(status_code=401, detail="invalid secret")
 
+    if payload.action == "modify_stop" and payload.stop_loss is None:
+        logger.warning("Rejected modify_stop without stop_loss for instrument=%s", payload.instrument)
+        raise HTTPException(status_code=400, detail="modify_stop requires stop_loss")
+
     units = abs(payload.units)
+    if payload.action == "close_partial" and units == 0:
+        logger.warning("Rejected close_partial without units for instrument=%s", payload.instrument)
+        raise HTTPException(status_code=400, detail="close_partial requires units > 0")
     if units > settings.max_order_units:
         logger.warning(
             "Rejected order exceeding MAX_ORDER_UNITS: requested=%s cap=%s",
@@ -71,10 +87,33 @@ async def webhook(request: Request):
     )
 
     try:
+        # Refuse blind entries: if a position is already open (e.g. the strategy and
+        # the broker desynced after an intrabar stop-out or a lost alert), stacking a
+        # second tranche would create a position size the backtest never models.
+        if payload.action in ("buy", "sell") and oanda.has_open_position(payload.instrument):
+            logger.warning(
+                "Rejected %s: position already open for instrument=%s",
+                payload.action,
+                payload.instrument,
+            )
+            raise HTTPException(
+                status_code=409,
+                detail="position already open for instrument; close it before re-entering",
+            )
         if payload.action == "buy":
-            result = oanda.place_market_order(payload.instrument, units)
+            result = oanda.place_market_order(
+                payload.instrument, units,
+                stop_loss=payload.stop_loss, take_profit=payload.take_profit,
+            )
         elif payload.action == "sell":
-            result = oanda.place_market_order(payload.instrument, -units)
+            result = oanda.place_market_order(
+                payload.instrument, -units,
+                stop_loss=payload.stop_loss, take_profit=payload.take_profit,
+            )
+        elif payload.action == "close_partial":
+            result = oanda.close_position_partial(payload.instrument, units)
+        elif payload.action == "modify_stop":
+            result = oanda.set_trade_stop(payload.instrument, payload.stop_loss)
         else:  # close_all
             result = oanda.close_position(payload.instrument)
     except OandaError as exc:

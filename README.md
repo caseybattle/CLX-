@@ -72,11 +72,22 @@ This is a deliberate, multi-step switch — don't flip it casually:
   "secret": "must match WEBHOOK_SECRET",
   "instrument": "EUR_USD",
   "action": "buy | sell | close_all",
-  "units": 1000
+  "units": 1000,
+  "stop_loss": 1.1210,
+  "take_profit": 1.1590
 }
 ```
 `units` is ignored for `close_all` (it closes the entire position, long or short) and is
-capped at `MAX_ORDER_UNITS` for `buy`/`sell`.
+capped at `MAX_ORDER_UNITS` for `buy`/`sell`. `stop_loss` and `take_profit` are optional
+prices for `buy`/`sell`; when present they are attached to the OANDA order as broker-side
+stop-loss / take-profit orders, so the position stays protected even if the server or the
+TradingView alert feed goes down. The Pine strategy computes them and includes them
+automatically when its risk inputs are enabled.
+
+Two additional actions support live trade management: `close_partial` (with `units` > 0)
+closes part of the net position — the strategy uses it to bank half at +1R — and
+`modify_stop` (with `stop_loss`) moves the stop on the open trade(s), which the strategy
+uses to move stops to breakeven.
 
 ## Repo layout
 

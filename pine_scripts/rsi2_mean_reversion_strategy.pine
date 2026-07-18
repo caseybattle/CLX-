@@ -1,41 +1,474 @@
 //@version=5
-strategy("RSI-2 Mean Reversion (200SMA filter / 5SMA exit)", overlay=true,
-     default_qty_type=strategy.cash, default_qty_value=25000, initial_capital=25000)
+// Slippage of 10 ticks (1 pip) per fill models OANDA's ~1.5-2 pip EUR/USD spread as
+// ~2 pips per round trip — without it the backtest trades at frictionless mid prices
+// and overstates every result.
+strategy("RSI-2 MR + Flags (regime routed)", overlay=true,
+     default_qty_type=strategy.fixed, default_qty_value=10000, initial_capital=25000,
+     pyramiding=0, process_orders_on_close=true, margin_long=2, margin_short=2,
+     max_labels_count=500, max_lines_count=300, max_boxes_count=100, slippage=10)
 
-// ---- Inputs (fill these in to match whatever you're testing) ----
-rsiLength     = input.int(2, "RSI Length")
-rsiEntryLevel = input.float(10, "Enter long when RSI drops below")
-trendSmaLen   = input.int(200, "Trend filter SMA length")
-exitSmaLen    = input.int(5, "Exit SMA length")
-orderUnits    = input.int(1000, "Units to send in webhook alert (informational only)")
-oandaInstrument = input.string("EUR_USD", "OANDA instrument (must match webhook payload)")
+// ---- Regime router ----
+grpRegime = "Regime router"
+tradeMode = input.string("Auto (regime router)", "Trade mode", group=grpRegime,
+     options=["Auto (regime router)", "Both always", "Mean reversion only", "Flags only"],
+     tooltip="Auto: an efficiency-ratio regime detector routes entries — choppy/range markets " +
+             "take RSI-2 dip-buys, trending markets take flag breakouts. The other modes force " +
+             "one behavior everywhere (useful for A/B testing which module earns its keep).")
+regimeLen     = input.int(50, "Regime lookback (bars)", group=grpRegime)
+erTrendThresh = input.float(0.30, "Trending when efficiency ratio above", step=0.05, group=grpRegime,
+     tooltip="Efficiency ratio = |net move| / sum of bar-to-bar moves over the lookback. " +
+             "Near 1 = clean trend, near 0 = chop. 0.25-0.35 is a reasonable band to test.")
+
+// ---- Mean reversion inputs ----
+grpStrategy = "Mean reversion (RSI-2)"
+rsiLength     = input.int(2, "RSI Length", group=grpStrategy)
+rsiEntryLevel = input.float(10, "Enter long when RSI drops below", group=grpStrategy)
+trendSmaLen   = input.int(200, "Trend filter SMA length", group=grpStrategy)
+useTrendFilter = input.bool(true, "Require price above trend SMA (longs)", group=grpStrategy)
+exitSmaLen    = input.int(5, "Exit SMA length", group=grpStrategy)
+minPullbackAtr = input.float(0.0, "Min dip below recent high (ATR multiples, 0 = off)", step=0.1,
+     group=grpStrategy)
+pullbackLookback = input.int(20, "Recent high/low lookback (bars)", group=grpStrategy)
+enableShorts  = input.bool(false, "Enable mean-reversion shorts", group=grpStrategy,
+     tooltip="Mirror of the long rules. Flag trades short regardless of this toggle.")
+
+// ---- Flag pattern inputs ----
+grpFlag = "Flag pattern (continuation)"
+impulseBars   = input.int(8, "Flagpole lookback (bars)", group=grpFlag)
+impulseAtr    = input.float(3.0, "Min flagpole size (ATR multiples)", step=0.5, group=grpFlag)
+flagBars      = input.int(5, "Flag consolidation bars", group=grpFlag)
+flagMaxRetrace = input.float(0.5, "Max flag range vs pole (0-1)", step=0.1, group=grpFlag)
+
+// ---- Entry safety filters ----
+grpFilters = "Entry filters (safety)"
+useSessionFilter = input.bool(true, "Only enter during liquid sessions", group=grpFilters,
+     tooltip="Blocks new entries outside the chosen New-York-time window. Default 02:00-16:59 NY " +
+             "covers London + New York and blocks the 17:00 rollover hour (garbage spreads) and " +
+             "the quiet Asia drift. Exits are never blocked.")
+sessStartHour = input.int(2, "Session start hour (NY time)", minval=0, maxval=23, group=grpFilters)
+sessEndHour   = input.int(16, "Session end hour (NY time)", minval=0, maxval=23, group=grpFilters)
+useVolBreaker = input.bool(true, "Pause entries on volatility spikes", group=grpFilters,
+     tooltip="When ATR blows out past the chosen multiple of its own average (a news candle), " +
+             "block new entries for the cooldown period. Mean reversion into a news spike is " +
+             "how accounts die; the script can't read the calendar but it can read the footprint.")
+volSpikeMult  = input.float(2.0, "Volatility spike: ATR above x its average", step=0.25, group=grpFilters)
+volCooldownBars = input.int(6, "Bars to pause after a spike", group=grpFilters)
+useStreakBrake = input.bool(true, "Pause after a losing streak / deep drawdown", group=grpFilters,
+     tooltip="After the chosen number of consecutive losses, entries pause for the cooldown. " +
+             "Separately, if equity falls the drawdown % below its peak, entries halt until " +
+             "equity recovers — the mechanical version of stepping away from the desk.")
+maxConsecLosses = input.int(5, "Consecutive losses before pausing", group=grpFilters)
+brakeCooldownBars = input.int(48, "Bars to pause after a streak", group=grpFilters)
+ddBrakePct    = input.float(15.0, "Pause entries at % drawdown from equity peak", step=1.0, group=grpFilters)
+ddCooldownBars = input.int(400, "Bars to pause after a drawdown breach", group=grpFilters,
+     tooltip="Once flat, equity can only recover by trading again, so the drawdown pause " +
+             "releases after this many bars and the equity peak resets — otherwise the halt " +
+             "would be permanent.")
+
+// ---- Risk & sizing ----
+grpRisk = "Risk & sizing"
+sizingMode = input.string("Risk % of equity", "Position sizing", group=grpRisk,
+     options=["Risk % of equity", "Fixed units"])
+riskPct       = input.float(2.0, "Risk per trade (% of equity)", step=0.5, group=grpRisk,
+     tooltip="IMPORTANT: live order sizes are computed from the Strategy Tester's simulated " +
+             "equity, so set the chart's initial capital (strategy Properties) to your real " +
+             "account balance to make live risk match. Sizing math assumes a USD account " +
+             "trading a *_USD pair like EUR_USD; other pairs will size conservatively wrong.")
+atrLength     = input.int(14, "ATR length", group=grpRisk)
+useStopLoss   = input.bool(true, "Use ATR stop loss (mean-reversion trades)", group=grpRisk)
+slAtrMult     = input.float(2.5, "Stop loss distance (ATR multiples)", step=0.1, group=grpRisk)
+useTakeProfit = input.bool(true, "Use ATR take profit (mean-reversion trades)", group=grpRisk)
+tpAtrMult     = input.float(4.0, "Take profit distance (ATR multiples)", step=0.1, group=grpRisk,
+     tooltip="Flag trades ignore these toggles and always use their structural stop/target. " +
+             "Keep this above the stop distance so the +1R partial/breakeven management can " +
+             "happen before the target — if target and 1R coincide, the management never fires.")
+
+// ---- Trade management ----
+grpMgmt = "Trade management"
+usePartial = input.bool(true, "Bank half the position at +1R", group=grpMgmt,
+     tooltip="When the trade is up one stop-distance (1R), close half. Live, this sends a " +
+             "close_partial webhook so OANDA banks it too.")
+partialAtR = input.float(1.0, "Partial profit at (R multiples)", step=0.25, group=grpMgmt)
+useBreakeven = input.bool(true, "Move stop to entry at +1R", group=grpMgmt,
+     tooltip="Once up 1R, the stop moves to the entry price so an already-winning trade can no " +
+             "longer become a loser. Live, this sends a modify_stop webhook so the stop moves " +
+             "at OANDA itself.")
+beAtR      = input.float(1.0, "Breakeven at (R multiples)", step=0.25, group=grpMgmt)
+
+// ---- Webhook ----
+grpWebhook = "Webhook"
+orderUnits      = input.int(10000, "Max order size in units (backtest AND webhook)", group=grpWebhook,
+     tooltip="Hard cap on units per trade, and the trade size in Fixed-units mode. Keep equal to " +
+             "MAX_ORDER_UNITS in the server's .env. Margin is modeled at 50:1 (OANDA US).")
+oandaInstrument = input.string("EUR_USD", "OANDA instrument (must match webhook payload)", group=grpWebhook)
+
+// ---- Display ----
+grpDisplay = "Display"
+showSmas      = input.bool(true, "Show SMAs", group=grpDisplay)
+showSignals   = input.bool(true, "Show entry/exit markers", group=grpDisplay)
+showLevels    = input.bool(true, "Show entry / stop / target lines", group=grpDisplay)
+shadePosition = input.bool(true, "Shade background while in a position", group=grpDisplay)
+showStatus    = input.bool(true, "Show status panel (regime / filters)", group=grpDisplay)
+showPatterns  = input.bool(true, "Draw detected flag patterns (pole + box)", group=grpDisplay,
+     tooltip="When a flag trade triggers, draws the flagpole, a box around the consolidation, " +
+             "and a BULL/BEAR FLAG tag. Old patterns stay on the chart so you can scroll back " +
+             "and study every pattern it traded.")
+showDebug     = input.bool(false, "Show entry debug labels", group=grpDisplay)
 
 // ---- Indicators ----
-rsiValue  = ta.rsi(close, rsiLength)
-trendSma  = ta.sma(close, trendSmaLen)
-exitSma   = ta.sma(close, exitSmaLen)
+rsiValue = ta.rsi(close, rsiLength)
+trendSma = ta.sma(close, trendSmaLen)
+exitSma  = ta.sma(close, exitSmaLen)
+atrValue = ta.atr(atrLength)
+atrBase  = ta.sma(atrValue, 100)
+recentHigh = ta.highest(high, pullbackLookback)
+recentLow  = ta.lowest(low, pullbackLookback)
 
-longCondition  = rsiValue < rsiEntryLevel and close > trendSma
-exitCondition  = close > exitSma
+erNum = math.abs(close - close[regimeLen])
+erDen = math.sum(math.abs(close - close[1]), regimeLen)
+effRatio = erDen == 0 ? 0.0 : erNum / erDen
+trending = effRatio >= erTrendThresh
 
-// ---- Strategy Tester orders (Phase 1: pure backtest, no live orders) ----
-if longCondition
-    strategy.entry("Long", strategy.long)
+// ---- Position sizing ----
+maxAffordableUnits = math.max(0, math.floor(strategy.equity * 50.0 * 0.8 / close))
 
-if exitCondition
-    strategy.close("Long")
+f_units(stopDist) =>
+    riskBased = math.floor(strategy.equity * (riskPct / 100.0) / math.max(stopDist, syminfo.mintick * 10))
+    base = sizingMode == "Fixed units" ? orderUnits : riskBased
+    math.max(0, math.min(math.min(base, maxAffordableUnits), orderUnits))
 
-plot(trendSma, "200 SMA", color=color.orange)
-plot(exitSma, "5 SMA", color=color.blue)
+f_pips(diff) =>
+    math.abs(diff) / (syminfo.mintick * 10)
 
-// ---- Alerts (Phase 2: wire these up to the webhook bridge once backtest looks good) ----
-// Create a TradingView alert on this script with condition "Any alert() function call" and
-// paste the corresponding JSON below into the alert's "Message" box, replacing WEBHOOK_SECRET
-// with the value you set in .env. The {{ }} placeholders are filled in by TradingView.
-if longCondition
+// ---- Position state ----
+inLong  = strategy.position_size > 0
+inShort = strategy.position_size < 0
+isFlat  = strategy.position_size == 0
+
+// ---- Safety gates ----
+hourNY = hour(time, "America/New_York")
+inSessionWindow = sessStartHour <= sessEndHour ?
+     (hourNY >= sessStartHour and hourNY <= sessEndHour) :
+     (hourNY >= sessStartHour or hourNY <= sessEndHour)
+sessionOk = not useSessionFilter or inSessionWindow
+
+volSpike = not na(atrBase) and atrValue > volSpikeMult * atrBase
+var int lastSpikeBar = na
+if volSpike
+    lastSpikeBar := bar_index
+volOk = not useVolBreaker or (not volSpike and (na(lastSpikeBar) or bar_index - lastSpikeBar >= volCooldownBars))
+
+// Walk every close since the last check (a partial and a full exit can land on the
+// same bar) and skip the "partial" fills so the streak counts whole trades — otherwise
+// a profitable half-exit would reset the streak even when the remainder stops out.
+var int consecLosses = 0
+var int seenTrades = 0
+if strategy.closedtrades > seenTrades
+    for i = seenTrades to strategy.closedtrades - 1
+        if strategy.closedtrades.exit_comment(i) != "partial"
+            consecLosses := strategy.closedtrades.profit(i) < 0 ? consecLosses + 1 : 0
+    seenTrades := strategy.closedtrades
+var int brakeBar = na
+if useStreakBrake and consecLosses >= maxConsecLosses
+    brakeBar := bar_index
+    consecLosses := 0
+brakeActive = useStreakBrake and not na(brakeBar) and bar_index - brakeBar < brakeCooldownBars
+
+// Drawdown pause with a timed release: once flat, equity is frozen until the next
+// trade, so a pause conditioned only on "equity recovers" would deadlock forever.
+var float eqPeak = 0.0
+var int ddBar = na
+eqPeak := math.max(eqPeak, strategy.equity)
+ddBreach = useStreakBrake and strategy.equity < eqPeak * (1 - ddBrakePct / 100.0)
+if ddBreach and na(ddBar)
+    ddBar := bar_index
+ddActive = not na(ddBar) and bar_index - ddBar < ddCooldownBars
+if not na(ddBar) and bar_index - ddBar >= ddCooldownBars
+    ddBar := na
+    eqPeak := strategy.equity
+
+entryGate = sessionOk and volOk and not brakeActive and not ddActive
+
+// ---- Regime routing ----
+mrAllowed = tradeMode == "Both always" or tradeMode == "Mean reversion only" or
+     (tradeMode == "Auto (regime router)" and not trending)
+flagsAllowed = tradeMode == "Both always" or tradeMode == "Flags only" or
+     (tradeMode == "Auto (regime router)" and trending)
+
+// ---- Flag pattern detection ----
+flagHighPrev = ta.highest(high, flagBars)[1]
+flagLowPrev  = ta.lowest(low, flagBars)[1]
+flagRange    = flagHighPrev - flagLowPrev
+bullPoleSize = close[flagBars + 1] - close[flagBars + impulseBars + 1]
+bearPoleSize = close[flagBars + impulseBars + 1] - close[flagBars + 1]
+
+bullFlagSetup = flagsAllowed and bullPoleSize >= impulseAtr * atrValue and flagRange <= flagMaxRetrace * bullPoleSize
+bearFlagSetup = flagsAllowed and bearPoleSize >= impulseAtr * atrValue and flagRange <= flagMaxRetrace * bearPoleSize
+
+flagLongUnitsCalc  = f_units(math.max(close - flagLowPrev, syminfo.mintick))
+flagShortUnitsCalc = f_units(math.max(flagHighPrev - close, syminfo.mintick))
+
+flagLongSignal  = isFlat and entryGate and bullFlagSetup and close > flagHighPrev and flagLongUnitsCalc > 0
+flagShortSignal = isFlat and entryGate and bearFlagSetup and close < flagLowPrev and flagShortUnitsCalc > 0
+
+// ---- Mean-reversion signals ----
+longTrendOk  = not useTrendFilter or close > trendSma
+shortTrendOk = not useTrendFilter or close < trendSma
+longDipOk    = minPullbackAtr == 0.0 or (recentHigh - close) >= minPullbackAtr * atrValue
+shortDipOk   = minPullbackAtr == 0.0 or (close - recentLow) >= minPullbackAtr * atrValue
+
+mrStopDist = slAtrMult * atrValue
+mrUnits    = f_units(mrStopDist)
+noFlagThisBar = not flagLongSignal and not flagShortSignal
+
+longEntrySignal = mrAllowed and isFlat and entryGate and noFlagThisBar and mrUnits > 0 and
+     rsiValue < rsiEntryLevel and longTrendOk and longDipOk
+shortEntrySignal = enableShorts and mrAllowed and isFlat and entryGate and noFlagThisBar and
+     mrUnits > 0 and rsiValue > (100 - rsiEntryLevel) and shortTrendOk and shortDipOk
+
+// ---- Entry bookkeeping ----
+var float entryPrice = na
+var float stopPrice  = na
+var float tpPrice    = na
+var float initRisk   = na
+var string tradeType = "none"
+var string activeId  = "none"
+var int liveUnits    = 0
+var bool movedBE     = false
+var bool tookPartial = false
+if longEntrySignal
+    entryPrice := close
+    stopPrice  := close - slAtrMult * atrValue
+    tpPrice    := close + tpAtrMult * atrValue
+    tradeType  := "mr"
+    activeId   := "Long"
+    liveUnits  := mrUnits
+if shortEntrySignal
+    entryPrice := close
+    stopPrice  := close + slAtrMult * atrValue
+    tpPrice    := close - tpAtrMult * atrValue
+    tradeType  := "mr"
+    activeId   := "Short"
+    liveUnits  := mrUnits
+if flagLongSignal
+    entryPrice := close
+    stopPrice  := flagLowPrev
+    tpPrice    := close + bullPoleSize
+    tradeType  := "flag"
+    activeId   := "FlagLong"
+    liveUnits  := flagLongUnitsCalc
+if flagShortSignal
+    entryPrice := close
+    stopPrice  := flagHighPrev
+    tpPrice    := close - bearPoleSize
+    tradeType  := "flag"
+    activeId   := "FlagShort"
+    liveUnits  := flagShortUnitsCalc
+anyEntrySignal = longEntrySignal or shortEntrySignal or flagLongSignal or flagShortSignal
+if anyEntrySignal
+    initRisk    := math.abs(close - stopPrice)
+    movedBE     := false
+    tookPartial := false
+
+// ---- Draw the detected flag pattern (pole + consolidation box + tag) ----
+if showPatterns and (flagLongSignal or flagShortSignal)
+    poleCol = flagLongSignal ? color.green : color.red
+    line.new(bar_index - flagBars - impulseBars - 1, close[flagBars + impulseBars + 1],
+         bar_index - flagBars - 1, close[flagBars + 1], color=color.new(poleCol, 20), width=2)
+    box.new(bar_index - flagBars, flagHighPrev, bar_index - 1, flagLowPrev,
+         border_color=color.orange, bgcolor=color.new(color.orange, 85))
+    label.new(bar_index - flagBars, flagHighPrev,
+         flagLongSignal ? "BULL FLAG" : "BEAR FLAG", style=label.style_label_down,
+         color=color.new(color.orange, 20), textcolor=color.white, size=size.small)
+
+// ---- Exits (evaluated on bar close, matching webhook alert timing) ----
+longStopHit  = inLong and close <= stopPrice and (useStopLoss or tradeType == "flag" or movedBE)
+longTpHit    = inLong and close >= tpPrice and (useTakeProfit or tradeType == "flag")
+shortStopHit = inShort and close >= stopPrice and (useStopLoss or tradeType == "flag" or movedBE)
+shortTpHit   = inShort and close <= tpPrice and (useTakeProfit or tradeType == "flag")
+
+longExitSignal  = inLong and ((tradeType == "mr" and close > exitSma) or longStopHit or longTpHit)
+shortExitSignal = inShort and ((tradeType == "mr" and close < exitSma) or shortStopHit or shortTpHit)
+
+// ---- Trade management: partial profit + breakeven ----
+// Runs after exit evaluation and is skipped on exit bars, so a target/stop close
+// can't also emit partial or breakeven alerts in the same instant — those would
+// race at the broker and error against a freshly flat account.
+partialNow = false
+beNow = false
+partialUnits = 0
+exitingThisBar = longExitSignal or shortExitSignal
+if (inLong or inShort) and not exitingThisBar and not na(initRisk) and initRisk > 0
+    rr = ((close - entryPrice) * (inLong ? 1 : -1)) / initRisk
+    if usePartial and not tookPartial and rr >= partialAtR and math.abs(strategy.position_size) > 1
+        strategy.close(activeId, qty_percent=50, comment="partial")
+        partialUnits := math.max(1, math.round(liveUnits / 2))
+        liveUnits := liveUnits - partialUnits
+        tookPartial := true
+        partialNow := true
+    if useBreakeven and not movedBE and rr >= beAtR
+        stopPrice := entryPrice
+        movedBE := true
+        beNow := true
+
+// ---- Strategy Tester orders ----
+if longEntrySignal
+    strategy.entry("Long", strategy.long, qty=mrUnits)
+if shortEntrySignal
+    strategy.entry("Short", strategy.short, qty=mrUnits)
+if flagLongSignal
+    strategy.entry("FlagLong", strategy.long, qty=flagLongUnitsCalc)
+if flagShortSignal
+    strategy.entry("FlagShort", strategy.short, qty=flagShortUnitsCalc)
+if longExitSignal or shortExitSignal
+    strategy.close_all()
+
+// ---- Plots ----
+plot(showSmas ? trendSma : na, "Trend SMA", color=color.orange, linewidth=2)
+plot(showSmas ? exitSma : na, "Exit SMA", color=color.new(color.blue, 30))
+
+showFrom = inLong or inShort or anyEntrySignal
+plot(showLevels and showFrom ? entryPrice : na, "Entry price (history)",
+     color=color.new(color.gray, 65), style=plot.style_linebr)
+plot(showLevels and showFrom and (useStopLoss or tradeType == "flag") ? stopPrice : na,
+     "Stop loss (history)", color=color.new(color.red, 60), style=plot.style_linebr)
+plot(showLevels and showFrom and (useTakeProfit or tradeType == "flag") ? tpPrice : na,
+     "Take profit (history)", color=color.new(color.teal, 60), style=plot.style_linebr)
+
+plotshape(showSignals and longEntrySignal, "Long entry", style=shape.triangleup,
+     location=location.belowbar, color=color.green, size=size.small)
+plotshape(showSignals and shortEntrySignal, "Short entry", style=shape.triangledown,
+     location=location.abovebar, color=color.red, size=size.small)
+plotshape(showSignals and flagLongSignal, "Bull flag entry", style=shape.diamond,
+     location=location.belowbar, color=color.orange, size=size.small)
+plotshape(showSignals and flagShortSignal, "Bear flag entry", style=shape.diamond,
+     location=location.abovebar, color=color.orange, size=size.small)
+plotshape(showSignals and (longExitSignal or shortExitSignal), "Exit", style=shape.xcross,
+     location=location.abovebar, color=color.gray, size=size.tiny)
+plotshape(showSignals and partialNow, "Partial profit", style=shape.circle,
+     location=location.abovebar, color=color.teal, size=size.tiny)
+bgcolor(shadePosition and inLong ? color.new(color.green, 92) :
+     shadePosition and inShort ? color.new(color.red, 92) : na)
+
+// ---- Status panel ----
+var table statusTable = table.new(position.top_right, 1, 5)
+if barstate.islast and showStatus
+    regimeTxt = tradeMode == "Auto (regime router)" ?
+         (trending ? "REGIME: TRENDING — flag entries" : "REGIME: RANGE — dip-buy entries") :
+         "MODE: " + tradeMode
+    table.cell(statusTable, 0, 0, regimeTxt, text_color=color.white,
+         bgcolor=color.new(color.blue, 25), text_size=size.small, text_halign=text.align_left)
+    table.cell(statusTable, 0, 1, useSessionFilter and not sessionOk ? "SESSION: entries paused" : "",
+         text_color=color.white, bgcolor=useSessionFilter and not sessionOk ?
+         color.new(color.orange, 25) : color.new(color.black, 100), text_size=size.small,
+         text_halign=text.align_left)
+    table.cell(statusTable, 0, 2, not volOk ? "VOLATILITY SPIKE: entries paused" : "",
+         text_color=color.white, bgcolor=not volOk ? color.new(color.orange, 25) :
+         color.new(color.black, 100), text_size=size.small, text_halign=text.align_left)
+    table.cell(statusTable, 0, 3, ddActive ? "DRAWDOWN BRAKE: entries halted" :
+         brakeActive ? "STREAK BRAKE: cooling down" : "", text_color=color.white,
+         bgcolor=ddActive or brakeActive ? color.new(color.red, 25) : color.new(color.black, 100),
+         text_size=size.small, text_halign=text.align_left)
+    table.cell(statusTable, 0, 4, sizingMode == "Fixed units" and maxAffordableUnits < orderUnits ?
+         "⚠ margin caps orders to ~" + str.tostring(maxAffordableUnits) + " units" : "",
+         text_color=color.white, bgcolor=sizingMode == "Fixed units" and
+         maxAffordableUnits < orderUnits ? color.new(color.red, 15) : color.new(color.black, 100),
+         text_size=size.small, text_halign=text.align_left)
+
+// ---- Active-trade overlay: extended lines + right-side labels ----
+var line entryLn  = na
+var line slLn     = na
+var line tpLn     = na
+var label entryLb = na
+var label slLb    = na
+var label tpLb    = na
+var int entryBar  = na
+if anyEntrySignal
+    entryBar := bar_index
+
+// When the trade closes, fade the overlay instead of deleting it — it stays as a
+// reference to the last trade's levels but no longer reads like a live position.
+activeTrade = inLong or inShort or anyEntrySignal
+if isFlat and (inLong[1] or inShort[1])
+    if not na(entryLn)
+        line.set_color(entryLn, color.new(color.gray, 70))
+        label.set_color(entryLb, color.new(color.gray, 70))
+    if not na(slLn)
+        line.set_color(slLn, color.new(color.red, 70))
+        label.set_color(slLb, color.new(color.red, 70))
+    if not na(tpLn)
+        line.set_color(tpLn, color.new(color.teal, 70))
+        label.set_color(tpLb, color.new(color.teal, 70))
+if showLevels and activeTrade and not na(entryBar)
+    line.delete(entryLn)
+    line.delete(slLn)
+    line.delete(tpLn)
+    label.delete(entryLb)
+    label.delete(slLb)
+    label.delete(tpLb)
+    endX = bar_index + 8
+    entryLn := line.new(entryBar, entryPrice, endX, entryPrice,
+         color=color.new(color.gray, 0), width=1, style=line.style_dashed)
+    entryLb := label.new(endX, entryPrice, "ENTRY  " + str.tostring(entryPrice, format.mintick),
+         style=label.style_label_left, color=color.new(color.gray, 10),
+         textcolor=color.white, size=size.small)
+    if useStopLoss or tradeType == "flag" or movedBE
+        stopTxt = movedBE ? "STOP (breakeven)  " + str.tostring(stopPrice, format.mintick) :
+             "STOP  " + str.tostring(stopPrice, format.mintick) + "  (-" +
+             str.tostring(f_pips(stopPrice - entryPrice), "#.#") + " pips)"
+        slLn := line.new(entryBar, stopPrice, endX, stopPrice, color=color.red, width=2)
+        slLb := label.new(endX, stopPrice, stopTxt, style=label.style_label_left,
+             color=color.new(color.red, 10), textcolor=color.white, size=size.small)
+    if useTakeProfit or tradeType == "flag"
+        tpLn := line.new(entryBar, tpPrice, endX, tpPrice, color=color.teal, width=2)
+        tpLb := label.new(endX, tpPrice,
+             "TARGET  " + str.tostring(tpPrice, format.mintick) + "  (+" +
+             str.tostring(f_pips(tpPrice - entryPrice), "#.#") + " pips)",
+             style=label.style_label_left, color=color.new(color.teal, 10),
+             textcolor=color.white, size=size.small)
+
+if showDebug and (longEntrySignal or shortEntrySignal)
+    label.new(bar_index, low,
+         text="RSI " + str.tostring(rsiValue, "#.#") +
+             (close > trendSma ? "\nabove 200SMA" : "\nbelow 200SMA") +
+             "\nER " + str.tostring(effRatio, "#.##"),
+         style=label.style_label_up, color=color.new(color.blue, 20),
+         textcolor=color.white, size=size.small)
+
+// ---- Alerts ----
+// Create ONE TradingView alert on this script: condition "Any alert() function call".
+// Replace WEBHOOK_SECRET with the value from your .env before creating the alert.
+// Entry alerts carry stop/target so the server attaches real broker-side orders;
+// management alerts (close_partial / modify_stop) keep OANDA in sync with the chart.
+slJson = useStopLoss ? ',"stop_loss":' + str.tostring(stopPrice, "#.#####") : ""
+tpJson = useTakeProfit ? ',"take_profit":' + str.tostring(tpPrice, "#.#####") : ""
+flagSlTpJson = ',"stop_loss":' + str.tostring(stopPrice, "#.#####") +
+     ',"take_profit":' + str.tostring(tpPrice, "#.#####")
+
+if longEntrySignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
-         '","action":"buy","units":' + str.tostring(orderUnits) + '}', alert.freq_once_per_bar_close)
-
-if exitCondition
+         '","action":"buy","units":' + str.tostring(mrUnits) + slJson + tpJson + '}',
+         alert.freq_once_per_bar_close)
+if shortEntrySignal
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"sell","units":' + str.tostring(mrUnits) + slJson + tpJson + '}',
+         alert.freq_once_per_bar_close)
+if flagLongSignal
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"buy","units":' + str.tostring(flagLongUnitsCalc) + flagSlTpJson + '}',
+         alert.freq_once_per_bar_close)
+if flagShortSignal
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"sell","units":' + str.tostring(flagShortUnitsCalc) + flagSlTpJson + '}',
+         alert.freq_once_per_bar_close)
+if partialNow
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"close_partial","units":' + str.tostring(partialUnits) + '}',
+         alert.freq_once_per_bar_close)
+if beNow
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"modify_stop","units":0,"stop_loss":' +
+         str.tostring(entryPrice, "#.#####") + '}', alert.freq_once_per_bar_close)
+if longExitSignal or shortExitSignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
          '","action":"close_all","units":0}', alert.freq_once_per_bar_close)
