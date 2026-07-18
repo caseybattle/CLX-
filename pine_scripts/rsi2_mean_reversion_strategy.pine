@@ -1,41 +1,86 @@
 //@version=5
 strategy("RSI-2 Mean Reversion (200SMA filter / 5SMA exit)", overlay=true,
-     default_qty_type=strategy.cash, default_qty_value=25000, initial_capital=25000)
+     default_qty_type=strategy.cash, default_qty_value=25000, initial_capital=25000,
+     pyramiding=0, process_orders_on_close=true)
 
-// ---- Inputs (fill these in to match whatever you're testing) ----
-rsiLength     = input.int(2, "RSI Length")
-rsiEntryLevel = input.float(10, "Enter long when RSI drops below")
-trendSmaLen   = input.int(200, "Trend filter SMA length")
-exitSmaLen    = input.int(5, "Exit SMA length")
-orderUnits    = input.int(1000, "Units to send in webhook alert (informational only)")
-oandaInstrument = input.string("EUR_USD", "OANDA instrument (must match webhook payload)")
+// ---- Strategy inputs ----
+grpStrategy = "Strategy"
+rsiLength     = input.int(2, "RSI Length", group=grpStrategy)
+rsiEntryLevel = input.float(10, "Enter long when RSI drops below", group=grpStrategy)
+trendSmaLen   = input.int(200, "Trend filter SMA length", group=grpStrategy)
+exitSmaLen    = input.int(5, "Exit SMA length", group=grpStrategy)
+enableShorts  = input.bool(false, "Enable short side (mirror of long rules)", group=grpStrategy,
+     tooltip="Short when RSI rises above (100 - entry level) while price is below the trend SMA; " +
+             "cover when price closes back below the exit SMA. Off by default — prove out the long " +
+             "side first. Keeps a single net position, so it stays compatible with OANDA US FIFO rules.")
+
+grpWebhook = "Webhook"
+orderUnits      = input.int(1000, "Units to send in webhook alert", group=grpWebhook)
+oandaInstrument = input.string("EUR_USD", "OANDA instrument (must match webhook payload)", group=grpWebhook)
+
+grpDisplay = "Display"
+showSmas      = input.bool(true, "Show SMAs", group=grpDisplay)
+showSignals   = input.bool(true, "Show entry/exit markers", group=grpDisplay)
+shadePosition = input.bool(true, "Shade background while in a position", group=grpDisplay)
 
 // ---- Indicators ----
-rsiValue  = ta.rsi(close, rsiLength)
-trendSma  = ta.sma(close, trendSmaLen)
-exitSma   = ta.sma(close, exitSmaLen)
+rsiValue = ta.rsi(close, rsiLength)
+trendSma = ta.sma(close, trendSmaLen)
+exitSma  = ta.sma(close, exitSmaLen)
 
-longCondition  = rsiValue < rsiEntryLevel and close > trendSma
-exitCondition  = close > exitSma
+// ---- Signals ----
+// Every signal is gated on the current position so it fires exactly once per trade.
+// Without this gate the exit condition (close > 5 SMA) is true on most bars of an
+// uptrend, flooding the chart with markers and the webhook with no-op close_all alerts.
+inLong  = strategy.position_size > 0
+inShort = strategy.position_size < 0
+isFlat  = strategy.position_size == 0
+
+longEntrySignal  = isFlat and rsiValue < rsiEntryLevel and close > trendSma
+longExitSignal   = inLong and close > exitSma
+shortEntrySignal = enableShorts and isFlat and rsiValue > (100 - rsiEntryLevel) and close < trendSma
+shortExitSignal  = inShort and close < exitSma
 
 // ---- Strategy Tester orders (Phase 1: pure backtest, no live orders) ----
-if longCondition
+// process_orders_on_close makes the tester fill at the bar close — the same moment the
+// alert() below fires — so backtest trades line up with what the webhook would do live.
+if longEntrySignal
     strategy.entry("Long", strategy.long)
-
-if exitCondition
+if longExitSignal
     strategy.close("Long")
+if shortEntrySignal
+    strategy.entry("Short", strategy.short)
+if shortExitSignal
+    strategy.close("Short")
 
-plot(trendSma, "200 SMA", color=color.orange)
-plot(exitSma, "5 SMA", color=color.blue)
+// ---- Plots ----
+plot(showSmas ? trendSma : na, "Trend SMA", color=color.orange, linewidth=2)
+plot(showSmas ? exitSma : na, "Exit SMA", color=color.new(color.blue, 30))
+plotshape(showSignals and longEntrySignal, "Long entry", style=shape.triangleup,
+     location=location.belowbar, color=color.green, size=size.small)
+plotshape(showSignals and longExitSignal, "Long exit", style=shape.xcross,
+     location=location.abovebar, color=color.gray, size=size.tiny)
+plotshape(showSignals and shortEntrySignal, "Short entry", style=shape.triangledown,
+     location=location.abovebar, color=color.red, size=size.small)
+plotshape(showSignals and shortExitSignal, "Short exit", style=shape.xcross,
+     location=location.belowbar, color=color.gray, size=size.tiny)
+bgcolor(shadePosition and inLong ? color.new(color.green, 92) :
+     shadePosition and inShort ? color.new(color.red, 92) : na)
 
 // ---- Alerts (Phase 2: wire these up to the webhook bridge once backtest looks good) ----
-// Create a TradingView alert on this script with condition "Any alert() function call" and
-// paste the corresponding JSON below into the alert's "Message" box, replacing WEBHOOK_SECRET
-// with the value you set in .env. The {{ }} placeholders are filled in by TradingView.
-if longCondition
+// Create a TradingView alert on this script with condition "Any alert() function call".
+// Replace WEBHOOK_SECRET below with the value from your .env before creating the alert.
+// Because the signals above are position-gated, each trade produces exactly one entry
+// alert and one close_all alert — no repeats while a position is open or flat.
+if longEntrySignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
          '","action":"buy","units":' + str.tostring(orderUnits) + '}', alert.freq_once_per_bar_close)
-
-if exitCondition
+if longExitSignal
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"close_all","units":0}', alert.freq_once_per_bar_close)
+if shortEntrySignal
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"sell","units":' + str.tostring(orderUnits) + '}', alert.freq_once_per_bar_close)
+if shortExitSignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
          '","action":"close_all","units":0}', alert.freq_once_per_bar_close)
