@@ -1,11 +1,11 @@
 //@version=5
-strategy("RSI-2 Mean Reversion (200SMA filter / 5SMA exit)", overlay=true,
+strategy("RSI-2 Mean Reversion + Flag Continuation", overlay=true,
      default_qty_type=strategy.fixed, default_qty_value=10000, initial_capital=25000,
      pyramiding=0, process_orders_on_close=true, margin_long=2, margin_short=2,
      max_labels_count=500)
 
 // ---- Strategy inputs ----
-grpStrategy = "Strategy"
+grpStrategy = "Mean reversion (RSI-2)"
 rsiLength     = input.int(2, "RSI Length", group=grpStrategy)
 rsiEntryLevel = input.float(10, "Enter long when RSI drops below", group=grpStrategy)
 trendSmaLen   = input.int(200, "Trend filter SMA length", group=grpStrategy)
@@ -25,23 +25,43 @@ enableShorts  = input.bool(false, "Enable short side (mirror of long rules)", gr
              "cover when price closes back below the exit SMA. Off by default — prove out the long " +
              "side first. Keeps a single net position, so it stays compatible with OANDA US FIFO rules.")
 
-grpRisk = "Risk (ATR stop / target)"
+grpFlag = "Flag pattern (continuation)"
+enableFlags   = input.bool(true, "Trade flag continuation breakouts", group=grpFlag,
+     tooltip="Detects a strong impulse (the pole), a tight consolidation (the flag), then enters " +
+             "on the close that breaks out of the flag in the impulse direction. Bear flags short " +
+             "the breakdown, bull flags buy the breakout. Target is the measured move (pole height " +
+             "projected from the breakout); stop is the far side of the flag. Trades both directions " +
+             "regardless of the mean-reversion short toggle.")
+impulseBars   = input.int(8, "Flagpole lookback (bars)", group=grpFlag)
+impulseAtr    = input.float(3.0, "Min flagpole size (ATR multiples)", step=0.5, group=grpFlag)
+flagBars      = input.int(5, "Flag consolidation bars", group=grpFlag)
+flagMaxRetrace = input.float(0.5, "Max flag range vs pole (0-1)", step=0.1, group=grpFlag,
+     tooltip="The consolidation's high-to-low range must be no more than this fraction of the " +
+             "pole. Tighter (0.3-0.4) = cleaner flags, fewer trades.")
+
+grpRisk = "Risk & sizing"
+sizingMode = input.string("Risk % of equity", "Position sizing", group=grpRisk,
+     options=["Risk % of equity", "Fixed units"],
+     tooltip="Risk % of equity: units are computed so that a stop-out loses the chosen % of the " +
+             "account — small account, small positions; equity grows, size grows. Fixed units: " +
+             "always trade the order size below (still capped by 50:1 margin).")
+riskPct       = input.float(2.0, "Risk per trade (% of equity)", step=0.5, group=grpRisk)
 atrLength     = input.int(14, "ATR length", group=grpRisk)
-useStopLoss   = input.bool(true, "Use ATR stop loss", group=grpRisk)
+useStopLoss   = input.bool(true, "Use ATR stop loss (mean-reversion trades)", group=grpRisk)
 slAtrMult     = input.float(2.5, "Stop loss distance (ATR multiples)", step=0.1, group=grpRisk,
      tooltip="Mean reversion needs breathing room — a tight stop turns winners into losers. " +
              "The stop is also sent to OANDA as a real stop-loss order attached to the fill.")
-useTakeProfit = input.bool(true, "Use ATR take profit", group=grpRisk)
+useTakeProfit = input.bool(true, "Use ATR take profit (mean-reversion trades)", group=grpRisk)
 tpAtrMult     = input.float(2.5, "Take profit distance (ATR multiples)", step=0.1, group=grpRisk,
      tooltip="Also sent to OANDA as a real take-profit order. The 5-SMA exit stays active too — " +
-             "whichever is reached first closes the trade.")
+             "whichever is reached first closes the trade. Flag trades ignore these toggles and " +
+             "always use their structural stop/target.")
 
 grpWebhook = "Webhook"
-orderUnits      = input.int(10000, "Order size in units (backtest AND webhook)", group=grpWebhook,
-     tooltip="Used for both the Strategy Tester position size and the webhook alert, so the " +
-             "backtest PnL matches what OANDA would actually trade. Margin is modeled at 50:1 " +
-             "(OANDA US): a $100 account supports roughly 4,000 units max — use ~2,000 to be safe. " +
-             "If you raise this above 10000, raise MAX_ORDER_UNITS in the server's .env to match.")
+orderUnits      = input.int(10000, "Max order size in units (backtest AND webhook)", group=grpWebhook,
+     tooltip="Hard cap on units per trade, and the trade size in Fixed-units mode. Keep this equal " +
+             "to MAX_ORDER_UNITS in the server's .env so the webhook never sends an order the " +
+             "server would reject. Margin is modeled at 50:1 (OANDA US).")
 oandaInstrument = input.string("EUR_USD", "OANDA instrument (must match webhook payload)", group=grpWebhook)
 
 grpDisplay = "Display"
@@ -50,9 +70,9 @@ showSignals   = input.bool(true, "Show entry/exit markers", group=grpDisplay)
 showLevels    = input.bool(true, "Show entry / stop / target lines", group=grpDisplay)
 shadePosition = input.bool(true, "Shade background while in a position", group=grpDisplay)
 showDebug     = input.bool(false, "Show entry debug labels (RSI / trend check)", group=grpDisplay,
-     tooltip="Prints the RSI value and trend-filter state at every entry so you can verify each " +
-             "marker obeys the rules. If an entry ever shows RSI at or above the entry level, " +
-             "that is a bug — report it.")
+     tooltip="Prints the RSI value and trend-filter state at every mean-reversion entry so you can " +
+             "verify each marker obeys the rules. If an entry ever shows RSI at or above the entry " +
+             "level, that is a bug — report it.")
 
 // ---- Indicators ----
 rsiValue = ta.rsi(close, rsiLength)
@@ -63,15 +83,19 @@ recentHigh = ta.highest(high, pullbackLookback)
 recentLow  = ta.lowest(low, pullbackLookback)
 
 // ---- Position sizing ----
-// Cap the order to what the account can actually margin at 50:1 (must stay in sync
-// with margin_long/margin_short above). Without this, an account too small for
-// orderUnits silently takes zero trades while entry signals keep plotting.
+// Cap every order to what the account can margin at 50:1 (must stay in sync with
+// margin_long/margin_short above). Without this, an account too small for the order
+// silently takes zero trades while entry signals keep plotting.
 maxAffordableUnits = math.max(0, math.floor(strategy.equity * 50.0 * 0.8 / close))
-tradeUnits = math.min(orderUnits, maxAffordableUnits)
+
+f_units(stopDist) =>
+    riskBased = math.floor(strategy.equity * (riskPct / 100.0) / math.max(stopDist, syminfo.mintick * 10))
+    base = sizingMode == "Fixed units" ? orderUnits : riskBased
+    math.max(0, math.min(math.min(base, maxAffordableUnits), orderUnits))
 
 var table warnTable = table.new(position.top_right, 1, 1)
 if barstate.islast
-    if tradeUnits < orderUnits
+    if sizingMode == "Fixed units" and maxAffordableUnits < orderUnits
         table.cell(warnTable, 0, 0,
              "⚠ Account can only margin ~" + str.tostring(maxAffordableUnits) +
              " units — orders capped to that (requested " + str.tostring(orderUnits) + ")",
@@ -82,70 +106,112 @@ inLong  = strategy.position_size > 0
 inShort = strategy.position_size < 0
 isFlat  = strategy.position_size == 0
 
-// ---- Signals ----
+// ---- Flag pattern detection ----
+// Pole: the close-to-close move over impulseBars, ending where the flag starts.
+// Flag: the last flagBars bars (excluding the current one) must be a tight range.
+// Entry: the current close breaks out of that range in the pole direction.
+flagHighPrev = ta.highest(high, flagBars)[1]
+flagLowPrev  = ta.lowest(low, flagBars)[1]
+flagRange    = flagHighPrev - flagLowPrev
+bullPoleSize = close[flagBars + 1] - close[flagBars + impulseBars + 1]
+bearPoleSize = close[flagBars + impulseBars + 1] - close[flagBars + 1]
+
+bullFlagSetup = enableFlags and bullPoleSize >= impulseAtr * atrValue and flagRange <= flagMaxRetrace * bullPoleSize
+bearFlagSetup = enableFlags and bearPoleSize >= impulseAtr * atrValue and flagRange <= flagMaxRetrace * bearPoleSize
+
+flagLongSignal  = isFlat and bullFlagSetup and close > flagHighPrev and f_units(close - flagLowPrev) > 0
+flagShortSignal = isFlat and bearFlagSetup and close < flagLowPrev and f_units(flagHighPrev - close) > 0
+
+// ---- Mean-reversion signals ----
 // Every signal is gated on the current position so it fires exactly once per trade.
+// Flag breakouts take priority on any bar where both would fire.
 longTrendOk  = not useTrendFilter or close > trendSma
 shortTrendOk = not useTrendFilter or close < trendSma
 longDipOk    = minPullbackAtr == 0.0 or (recentHigh - close) >= minPullbackAtr * atrValue
 shortDipOk   = minPullbackAtr == 0.0 or (close - recentLow) >= minPullbackAtr * atrValue
 
-canTrade = tradeUnits > 0
+mrStopDist = slAtrMult * atrValue
+mrUnits    = f_units(mrStopDist)
+noFlagThisBar = not flagLongSignal and not flagShortSignal
 
-longEntrySignal  = isFlat and canTrade and rsiValue < rsiEntryLevel and longTrendOk and longDipOk
-shortEntrySignal = enableShorts and isFlat and canTrade and rsiValue > (100 - rsiEntryLevel) and shortTrendOk and shortDipOk
+longEntrySignal  = isFlat and noFlagThisBar and mrUnits > 0 and rsiValue < rsiEntryLevel and longTrendOk and longDipOk
+shortEntrySignal = enableShorts and isFlat and noFlagThisBar and mrUnits > 0 and rsiValue > (100 - rsiEntryLevel) and shortTrendOk and shortDipOk
 
-// Entry / stop / target levels, fixed at the moment of entry.
+// ---- Entry bookkeeping: levels + trade type, fixed at the moment of entry ----
 var float entryPrice = na
 var float stopPrice  = na
 var float tpPrice    = na
+var string tradeType = "none"
 if longEntrySignal
     entryPrice := close
     stopPrice  := close - slAtrMult * atrValue
     tpPrice    := close + tpAtrMult * atrValue
+    tradeType  := "mr"
 if shortEntrySignal
     entryPrice := close
     stopPrice  := close + slAtrMult * atrValue
     tpPrice    := close - tpAtrMult * atrValue
+    tradeType  := "mr"
+if flagLongSignal
+    entryPrice := close
+    stopPrice  := flagLowPrev
+    tpPrice    := close + bullPoleSize
+    tradeType  := "flag"
+if flagShortSignal
+    entryPrice := close
+    stopPrice  := flagHighPrev
+    tpPrice    := close - bearPoleSize
+    tradeType  := "flag"
 
-// Exits are evaluated on bar close (same moment the webhook alert fires) so the
-// tester matches live behavior. OANDA additionally holds the hard stop/target from
-// the entry order, which protects the position between bar closes.
-longStopHit    = useStopLoss and inLong and close <= stopPrice
-longTpHit      = useTakeProfit and inLong and close >= tpPrice
-longExitSignal = inLong and (close > exitSma or longStopHit or longTpHit)
+// ---- Exits ----
+// Evaluated on bar close (same moment the webhook alert fires) so the tester matches
+// live behavior. OANDA additionally holds the hard stop/target from the entry order,
+// which protects the position between bar closes. Flag trades always honor their
+// structural stop/target; mean-reversion trades respect the risk toggles and also
+// exit on the exit-SMA cross.
+longStopHit  = inLong and close <= stopPrice and (useStopLoss or tradeType == "flag")
+longTpHit    = inLong and close >= tpPrice and (useTakeProfit or tradeType == "flag")
+shortStopHit = inShort and close >= stopPrice and (useStopLoss or tradeType == "flag")
+shortTpHit   = inShort and close <= tpPrice and (useTakeProfit or tradeType == "flag")
 
-shortStopHit    = useStopLoss and inShort and close >= stopPrice
-shortTpHit      = useTakeProfit and inShort and close <= tpPrice
-shortExitSignal = inShort and (close < exitSma or shortStopHit or shortTpHit)
+longExitSignal  = inLong and ((tradeType == "mr" and close > exitSma) or longStopHit or longTpHit)
+shortExitSignal = inShort and ((tradeType == "mr" and close < exitSma) or shortStopHit or shortTpHit)
 
 // ---- Strategy Tester orders (Phase 1: pure backtest, no live orders) ----
 if longEntrySignal
-    strategy.entry("Long", strategy.long, qty=tradeUnits)
-if longExitSignal
-    strategy.close("Long")
+    strategy.entry("Long", strategy.long, qty=mrUnits)
 if shortEntrySignal
-    strategy.entry("Short", strategy.short, qty=tradeUnits)
-if shortExitSignal
-    strategy.close("Short")
+    strategy.entry("Short", strategy.short, qty=mrUnits)
+if flagLongSignal
+    strategy.entry("FlagLong", strategy.long, qty=f_units(close - flagLowPrev))
+if flagShortSignal
+    strategy.entry("FlagShort", strategy.short, qty=f_units(flagHighPrev - close))
+if longExitSignal or shortExitSignal
+    strategy.close_all()
 
 // ---- Plots ----
 plot(showSmas ? trendSma : na, "Trend SMA", color=color.orange, linewidth=2)
 plot(showSmas ? exitSma : na, "Exit SMA", color=color.new(color.blue, 30))
 
-showFrom = inLong or inShort or longEntrySignal or shortEntrySignal
+anyEntrySignal = longEntrySignal or shortEntrySignal or flagLongSignal or flagShortSignal
+showFrom = inLong or inShort or anyEntrySignal
 plot(showLevels and showFrom ? entryPrice : na, "Entry price", color=color.gray,
      style=plot.style_linebr)
-plot(showLevels and showFrom and useStopLoss ? stopPrice : na, "Stop loss", color=color.red,
-     style=plot.style_linebr, linewidth=2)
-plot(showLevels and showFrom and useTakeProfit ? tpPrice : na, "Take profit", color=color.teal,
-     style=plot.style_linebr, linewidth=2)
+plot(showLevels and showFrom and (useStopLoss or tradeType == "flag") ? stopPrice : na,
+     "Stop loss", color=color.red, style=plot.style_linebr, linewidth=2)
+plot(showLevels and showFrom and (useTakeProfit or tradeType == "flag") ? tpPrice : na,
+     "Take profit", color=color.teal, style=plot.style_linebr, linewidth=2)
 
 plotshape(showSignals and longEntrySignal, "Long entry", style=shape.triangleup,
      location=location.belowbar, color=color.green, size=size.small)
-plotshape(showSignals and longExitSignal, "Long exit", style=shape.xcross,
-     location=location.abovebar, color=color.gray, size=size.tiny)
 plotshape(showSignals and shortEntrySignal, "Short entry", style=shape.triangledown,
      location=location.abovebar, color=color.red, size=size.small)
+plotshape(showSignals and flagLongSignal, "Bull flag entry", style=shape.diamond,
+     location=location.belowbar, color=color.orange, size=size.small)
+plotshape(showSignals and flagShortSignal, "Bear flag entry", style=shape.diamond,
+     location=location.abovebar, color=color.orange, size=size.small)
+plotshape(showSignals and longExitSignal, "Long exit", style=shape.xcross,
+     location=location.abovebar, color=color.gray, size=size.tiny)
 plotshape(showSignals and shortExitSignal, "Short exit", style=shape.xcross,
      location=location.belowbar, color=color.gray, size=size.tiny)
 bgcolor(shadePosition and inLong ? color.new(color.green, 92) :
@@ -166,18 +232,25 @@ if showDebug and (longEntrySignal or shortEntrySignal)
 // and take-profit orders at OANDA — protection lives at the broker, not just on the chart.
 slJson = useStopLoss ? ',"stop_loss":' + str.tostring(stopPrice, "#.#####") : ""
 tpJson = useTakeProfit ? ',"take_profit":' + str.tostring(tpPrice, "#.#####") : ""
+flagSlTpJson = ',"stop_loss":' + str.tostring(stopPrice, "#.#####") +
+     ',"take_profit":' + str.tostring(tpPrice, "#.#####")
 
 if longEntrySignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
-         '","action":"buy","units":' + str.tostring(tradeUnits) + slJson + tpJson + '}',
+         '","action":"buy","units":' + str.tostring(mrUnits) + slJson + tpJson + '}',
          alert.freq_once_per_bar_close)
-if longExitSignal
-    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
-         '","action":"close_all","units":0}', alert.freq_once_per_bar_close)
 if shortEntrySignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
-         '","action":"sell","units":' + str.tostring(tradeUnits) + slJson + tpJson + '}',
+         '","action":"sell","units":' + str.tostring(mrUnits) + slJson + tpJson + '}',
          alert.freq_once_per_bar_close)
-if shortExitSignal
+if flagLongSignal
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"buy","units":' + str.tostring(f_units(close - flagLowPrev)) + flagSlTpJson + '}',
+         alert.freq_once_per_bar_close)
+if flagShortSignal
+    alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
+         '","action":"sell","units":' + str.tostring(f_units(flagHighPrev - close)) + flagSlTpJson + '}',
+         alert.freq_once_per_bar_close)
+if longExitSignal or shortExitSignal
     alert('{"secret":"WEBHOOK_SECRET","instrument":"' + oandaInstrument +
          '","action":"close_all","units":0}', alert.freq_once_per_bar_close)
