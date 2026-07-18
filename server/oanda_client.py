@@ -68,3 +68,47 @@ class OandaClient:
         if resp.status_code >= 400:
             raise OandaError(f"OANDA close-position request failed ({resp.status_code}): {resp.text}")
         return resp.json()
+
+    def close_position_partial(self, instrument: str, units: int) -> dict:
+        """Close part of the net position (units is unsigned; side is looked up)."""
+        resp = self.session.get(self._url(f"/positions/{instrument}"), timeout=10)
+        if resp.status_code >= 400:
+            raise OandaError(f"OANDA position lookup failed ({resp.status_code}): {resp.text}")
+        position = resp.json().get("position", {})
+        long_units = float(position.get("long", {}).get("units", "0"))
+        short_units = float(position.get("short", {}).get("units", "0"))
+        if long_units > 0:
+            body = {"longUnits": str(units)}
+        elif short_units < 0:
+            body = {"shortUnits": str(units)}
+        else:
+            raise OandaError(f"no open {instrument} position to partially close")
+        resp = self.session.put(
+            self._url(f"/positions/{instrument}/close"), json=body, timeout=10
+        )
+        if resp.status_code >= 400:
+            raise OandaError(f"OANDA partial-close request failed ({resp.status_code}): {resp.text}")
+        return resp.json()
+
+    def set_trade_stop(self, instrument: str, stop_loss: float) -> dict:
+        """Move the stop-loss on the open trade(s) for an instrument (e.g. to breakeven)."""
+        resp = self.session.get(
+            self._url("/trades"), params={"instrument": instrument, "state": "OPEN"}, timeout=10
+        )
+        if resp.status_code >= 400:
+            raise OandaError(f"OANDA open-trades lookup failed ({resp.status_code}): {resp.text}")
+        trades = resp.json().get("trades", [])
+        if not trades:
+            raise OandaError(f"no open {instrument} trade to modify")
+        results = []
+        for trade in trades:
+            body = {"stopLoss": {"price": format_price(stop_loss), "timeInForce": "GTC"}}
+            resp = self.session.put(
+                self._url(f"/trades/{trade['id']}/orders"), json=body, timeout=10
+            )
+            if resp.status_code >= 400:
+                raise OandaError(
+                    f"OANDA stop modification failed ({resp.status_code}): {resp.text}"
+                )
+            results.append(resp.json())
+        return {"modified": results}

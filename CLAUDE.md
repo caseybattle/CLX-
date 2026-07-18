@@ -50,11 +50,13 @@ Three components, connected only at runtime by the webhook contract:
 ## Webhook contract
 
 `POST /webhook` takes `{"secret", "instrument", "action", "units"}` plus optional
-`stop_loss` / `take_profit` prices, where `action` is `buy`, `sell`, or `close_all`.
-`units` is ignored for `close_all` and rejected above `MAX_ORDER_UNITS` for buy/sell.
-When `stop_loss` / `take_profit` are present on buy/sell they become broker-side
-`stopLossOnFill` / `takeProfitOnFill` orders at OANDA. This contract is duplicated in
-the Pine script's `alert()` strings — keep them in sync.
+`stop_loss` / `take_profit` prices, where `action` is `buy`, `sell`, `close_all`,
+`close_partial` (requires `units` > 0; closes part of the net position, side looked
+up automatically), or `modify_stop` (requires `stop_loss`; moves the stop on the open
+trade(s), used for breakeven). `units` is ignored for `close_all` and rejected above
+`MAX_ORDER_UNITS` otherwise. When `stop_loss` / `take_profit` are present on buy/sell
+they become broker-side `stopLossOnFill` / `takeProfitOnFill` orders at OANDA. This
+contract is duplicated in the Pine script's `alert()` strings — keep them in sync.
 
 ## Safety invariants — do not weaken
 

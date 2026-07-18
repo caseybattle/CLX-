@@ -21,8 +21,18 @@ def stub_oanda(monkeypatch):
         calls["close_position"] = (instrument,)
         return {"longOrderFillTransaction": {"id": "2"}}
 
+    def fake_close_position_partial(self, instrument, units):
+        calls["close_position_partial"] = (instrument, units)
+        return {"longOrderFillTransaction": {"id": "3"}}
+
+    def fake_set_trade_stop(self, instrument, stop_loss):
+        calls["set_trade_stop"] = (instrument, stop_loss)
+        return {"modified": [{"id": "4"}]}
+
     monkeypatch.setattr(main.OandaClient, "place_market_order", fake_place_market_order)
     monkeypatch.setattr(main.OandaClient, "close_position", fake_close_position)
+    monkeypatch.setattr(main.OandaClient, "close_position_partial", fake_close_position_partial)
+    monkeypatch.setattr(main.OandaClient, "set_trade_stop", fake_set_trade_stop)
     return calls
 
 
@@ -88,6 +98,46 @@ def test_buy_passes_stop_loss_and_take_profit(client, stub_oanda):
     )
     assert resp.status_code == 200
     assert stub_oanda["place_market_order"] == ("EUR_USD", 1000, 1.1210, 1.1590)
+
+
+def test_close_partial_routes_units(client, stub_oanda):
+    resp = client.post(
+        "/webhook",
+        json={"secret": "test-secret", "instrument": "EUR_USD", "action": "close_partial", "units": 500},
+    )
+    assert resp.status_code == 200
+    assert stub_oanda["close_position_partial"] == ("EUR_USD", 500)
+
+
+def test_close_partial_requires_units(client):
+    resp = client.post(
+        "/webhook",
+        json={"secret": "test-secret", "instrument": "EUR_USD", "action": "close_partial", "units": 0},
+    )
+    assert resp.status_code == 400
+
+
+def test_modify_stop_routes_price(client, stub_oanda):
+    resp = client.post(
+        "/webhook",
+        json={
+            "secret": "test-secret",
+            "instrument": "EUR_USD",
+            "action": "modify_stop",
+            "units": 0,
+            "stop_loss": 1.14268,
+        },
+    )
+    assert resp.status_code == 200
+    assert stub_oanda["set_trade_stop"] == ("EUR_USD", 1.14268)
+
+
+def test_modify_stop_requires_stop_loss(client):
+    resp = client.post(
+        "/webhook",
+        json={"secret": "test-secret", "instrument": "EUR_USD", "action": "modify_stop", "units": 0},
+    )
+    assert resp.status_code == 400
 
 
 def test_rejects_non_positive_price_levels(client):

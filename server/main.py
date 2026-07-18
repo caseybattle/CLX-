@@ -14,7 +14,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger("webhook")
 
-ALLOWED_ACTIONS = {"buy", "sell", "close_all"}
+ALLOWED_ACTIONS = {"buy", "sell", "close_all", "close_partial", "modify_stop"}
 
 app = FastAPI(title="TradingView -> OANDA webhook bridge")
 settings = Settings()
@@ -62,7 +62,14 @@ async def webhook(request: Request):
         logger.warning("Rejected alert with invalid secret for instrument=%s", payload.instrument)
         raise HTTPException(status_code=401, detail="invalid secret")
 
+    if payload.action == "modify_stop" and payload.stop_loss is None:
+        logger.warning("Rejected modify_stop without stop_loss for instrument=%s", payload.instrument)
+        raise HTTPException(status_code=400, detail="modify_stop requires stop_loss")
+
     units = abs(payload.units)
+    if payload.action == "close_partial" and units == 0:
+        logger.warning("Rejected close_partial without units for instrument=%s", payload.instrument)
+        raise HTTPException(status_code=400, detail="close_partial requires units > 0")
     if units > settings.max_order_units:
         logger.warning(
             "Rejected order exceeding MAX_ORDER_UNITS: requested=%s cap=%s",
@@ -90,6 +97,10 @@ async def webhook(request: Request):
                 payload.instrument, -units,
                 stop_loss=payload.stop_loss, take_profit=payload.take_profit,
             )
+        elif payload.action == "close_partial":
+            result = oanda.close_position_partial(payload.instrument, units)
+        elif payload.action == "modify_stop":
+            result = oanda.set_trade_stop(payload.instrument, payload.stop_loss)
         else:  # close_all
             result = oanda.close_position(payload.instrument)
     except OandaError as exc:
