@@ -1,14 +1,25 @@
 //@version=5
 strategy("RSI-2 Mean Reversion (200SMA filter / 5SMA exit)", overlay=true,
      default_qty_type=strategy.fixed, default_qty_value=10000, initial_capital=25000,
-     pyramiding=0, process_orders_on_close=true)
+     pyramiding=0, process_orders_on_close=true, margin_long=2, margin_short=2,
+     max_labels_count=500)
 
 // ---- Strategy inputs ----
 grpStrategy = "Strategy"
 rsiLength     = input.int(2, "RSI Length", group=grpStrategy)
 rsiEntryLevel = input.float(10, "Enter long when RSI drops below", group=grpStrategy)
 trendSmaLen   = input.int(200, "Trend filter SMA length", group=grpStrategy)
+useTrendFilter = input.bool(true, "Require price above trend SMA (longs)", group=grpStrategy,
+     tooltip="On: only buy dips while price holds above the trend SMA (skips washouts below it, " +
+             "like a deep selloff under the 200 SMA). Off: take RSI dips in both regimes — " +
+             "catches big washout lows but also catches falling knives. Backtest both.")
 exitSmaLen    = input.int(5, "Exit SMA length", group=grpStrategy)
+minPullbackAtr = input.float(0.0, "Min dip below recent high (ATR multiples, 0 = off)", step=0.1,
+     group=grpStrategy,
+     tooltip="Skips longs that fire too close to a recent high. Try 1.0: the close must be at " +
+             "least 1 ATR below the highest high of the lookback window before a long is allowed. " +
+             "Kills the 'buying right under the top' entries.")
+pullbackLookback = input.int(20, "Recent high/low lookback (bars)", group=grpStrategy)
 enableShorts  = input.bool(false, "Enable short side (mirror of long rules)", group=grpStrategy,
      tooltip="Short when RSI rises above (100 - entry level) while price is below the trend SMA; " +
              "cover when price closes back below the exit SMA. Off by default — prove out the long " +
@@ -28,8 +39,9 @@ tpAtrMult     = input.float(2.5, "Take profit distance (ATR multiples)", step=0.
 grpWebhook = "Webhook"
 orderUnits      = input.int(10000, "Order size in units (backtest AND webhook)", group=grpWebhook,
      tooltip="Used for both the Strategy Tester position size and the webhook alert, so the " +
-             "backtest PnL matches what OANDA would actually trade. If you raise this above " +
-             "10000, raise MAX_ORDER_UNITS in the server's .env to match or orders will be rejected.")
+             "backtest PnL matches what OANDA would actually trade. Margin is modeled at 50:1 " +
+             "(OANDA US): a $100 account supports roughly 4,000 units max — use ~2,000 to be safe. " +
+             "If you raise this above 10000, raise MAX_ORDER_UNITS in the server's .env to match.")
 oandaInstrument = input.string("EUR_USD", "OANDA instrument (must match webhook payload)", group=grpWebhook)
 
 grpDisplay = "Display"
@@ -37,12 +49,18 @@ showSmas      = input.bool(true, "Show SMAs", group=grpDisplay)
 showSignals   = input.bool(true, "Show entry/exit markers", group=grpDisplay)
 showLevels    = input.bool(true, "Show entry / stop / target lines", group=grpDisplay)
 shadePosition = input.bool(true, "Shade background while in a position", group=grpDisplay)
+showDebug     = input.bool(false, "Show entry debug labels (RSI / trend check)", group=grpDisplay,
+     tooltip="Prints the RSI value and trend-filter state at every entry so you can verify each " +
+             "marker obeys the rules. If an entry ever shows RSI at or above the entry level, " +
+             "that is a bug — report it.")
 
 // ---- Indicators ----
 rsiValue = ta.rsi(close, rsiLength)
 trendSma = ta.sma(close, trendSmaLen)
 exitSma  = ta.sma(close, exitSmaLen)
 atrValue = ta.atr(atrLength)
+recentHigh = ta.highest(high, pullbackLookback)
+recentLow  = ta.lowest(low, pullbackLookback)
 
 // ---- Position state ----
 inLong  = strategy.position_size > 0
@@ -51,8 +69,13 @@ isFlat  = strategy.position_size == 0
 
 // ---- Signals ----
 // Every signal is gated on the current position so it fires exactly once per trade.
-longEntrySignal  = isFlat and rsiValue < rsiEntryLevel and close > trendSma
-shortEntrySignal = enableShorts and isFlat and rsiValue > (100 - rsiEntryLevel) and close < trendSma
+longTrendOk  = not useTrendFilter or close > trendSma
+shortTrendOk = not useTrendFilter or close < trendSma
+longDipOk    = minPullbackAtr == 0.0 or (recentHigh - close) >= minPullbackAtr * atrValue
+shortDipOk   = minPullbackAtr == 0.0 or (close - recentLow) >= minPullbackAtr * atrValue
+
+longEntrySignal  = isFlat and rsiValue < rsiEntryLevel and longTrendOk and longDipOk
+shortEntrySignal = enableShorts and isFlat and rsiValue > (100 - rsiEntryLevel) and shortTrendOk and shortDipOk
 
 // Entry / stop / target levels, fixed at the moment of entry.
 var float entryPrice = na
@@ -110,6 +133,14 @@ plotshape(showSignals and shortExitSignal, "Short exit", style=shape.xcross,
      location=location.belowbar, color=color.gray, size=size.tiny)
 bgcolor(shadePosition and inLong ? color.new(color.green, 92) :
      shadePosition and inShort ? color.new(color.red, 92) : na)
+
+if showDebug and (longEntrySignal or shortEntrySignal)
+    label.new(bar_index, low,
+         text="RSI " + str.tostring(rsiValue, "#.#") +
+             (close > trendSma ? "\nabove 200SMA" : "\nbelow 200SMA") +
+             "\ndip " + str.tostring((recentHigh - close) / atrValue, "#.#") + " ATR",
+         style=label.style_label_up, color=color.new(color.blue, 20),
+         textcolor=color.white, size=size.small)
 
 // ---- Alerts (Phase 2: wire these up to the webhook bridge once backtest looks good) ----
 // Create a TradingView alert on this script with condition "Any alert() function call".
