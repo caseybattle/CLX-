@@ -5,7 +5,7 @@
 strategy("RSI-2 MR + Flags (regime routed)", overlay=true,
      default_qty_type=strategy.fixed, default_qty_value=10000, initial_capital=25000,
      pyramiding=0, process_orders_on_close=true, margin_long=2, margin_short=2,
-     max_labels_count=500, slippage=10)
+     max_labels_count=500, max_lines_count=300, max_boxes_count=100, slippage=10)
 
 // ---- Regime router ----
 grpRegime = "Regime router"
@@ -109,6 +109,10 @@ showSignals   = input.bool(true, "Show entry/exit markers", group=grpDisplay)
 showLevels    = input.bool(true, "Show entry / stop / target lines", group=grpDisplay)
 shadePosition = input.bool(true, "Shade background while in a position", group=grpDisplay)
 showStatus    = input.bool(true, "Show status panel (regime / filters)", group=grpDisplay)
+showPatterns  = input.bool(true, "Draw detected flag patterns (pole + box)", group=grpDisplay,
+     tooltip="When a flag trade triggers, draws the flagpole, a box around the consolidation, " +
+             "and a BULL/BEAR FLAG tag. Old patterns stay on the chart so you can scroll back " +
+             "and study every pattern it traded.")
 showDebug     = input.bool(false, "Show entry debug labels", group=grpDisplay)
 
 // ---- Indicators ----
@@ -265,6 +269,17 @@ if anyEntrySignal
     initRisk    := math.abs(close - stopPrice)
     movedBE     := false
     tookPartial := false
+
+// ---- Draw the detected flag pattern (pole + consolidation box + tag) ----
+if showPatterns and (flagLongSignal or flagShortSignal)
+    poleCol = flagLongSignal ? color.green : color.red
+    line.new(bar_index - flagBars - impulseBars - 1, close[flagBars + impulseBars + 1],
+         bar_index - flagBars - 1, close[flagBars + 1], color=color.new(poleCol, 20), width=2)
+    box.new(bar_index - flagBars, flagHighPrev, bar_index - 1, flagLowPrev,
+         border_color=color.orange, bgcolor=color.new(color.orange, 85))
+    label.new(bar_index - flagBars, flagHighPrev,
+         flagLongSignal ? "BULL FLAG" : "BEAR FLAG", style=label.style_label_down,
+         color=color.new(color.orange, 20), textcolor=color.white, size=size.small)
 
 // ---- Exits (evaluated on bar close, matching webhook alert timing) ----
 longStopHit  = inLong and close <= stopPrice and (useStopLoss or tradeType == "flag" or movedBE)
