@@ -93,6 +93,9 @@ f_units(stopDist) =>
     base = sizingMode == "Fixed units" ? orderUnits : riskBased
     math.max(0, math.min(math.min(base, maxAffordableUnits), orderUnits))
 
+f_pips(diff) =>
+    math.abs(diff) / (syminfo.mintick * 10)
+
 var table warnTable = table.new(position.top_right, 1, 1)
 if barstate.islast
     if sizingMode == "Fixed units" and maxAffordableUnits < orderUnits
@@ -193,14 +196,16 @@ if longExitSignal or shortExitSignal
 plot(showSmas ? trendSma : na, "Trend SMA", color=color.orange, linewidth=2)
 plot(showSmas ? exitSma : na, "Exit SMA", color=color.new(color.blue, 30))
 
+// Faint history of past trades' levels (kept subtle so candles stay readable; the
+// active trade gets the bold extended lines + labels below instead).
 anyEntrySignal = longEntrySignal or shortEntrySignal or flagLongSignal or flagShortSignal
 showFrom = inLong or inShort or anyEntrySignal
-plot(showLevels and showFrom ? entryPrice : na, "Entry price", color=color.gray,
-     style=plot.style_linebr)
+plot(showLevels and showFrom ? entryPrice : na, "Entry price (history)",
+     color=color.new(color.gray, 65), style=plot.style_linebr)
 plot(showLevels and showFrom and (useStopLoss or tradeType == "flag") ? stopPrice : na,
-     "Stop loss", color=color.red, style=plot.style_linebr, linewidth=2)
+     "Stop loss (history)", color=color.new(color.red, 60), style=plot.style_linebr)
 plot(showLevels and showFrom and (useTakeProfit or tradeType == "flag") ? tpPrice : na,
-     "Take profit", color=color.teal, style=plot.style_linebr, linewidth=2)
+     "Take profit (history)", color=color.new(color.teal, 60), style=plot.style_linebr)
 
 plotshape(showSignals and longEntrySignal, "Long entry", style=shape.triangleup,
      location=location.belowbar, color=color.green, size=size.small)
@@ -216,6 +221,50 @@ plotshape(showSignals and shortExitSignal, "Short exit", style=shape.xcross,
      location=location.belowbar, color=color.gray, size=size.tiny)
 bgcolor(shadePosition and inLong ? color.new(color.green, 92) :
      shadePosition and inShort ? color.new(color.red, 92) : na)
+
+// ---- Active-trade overlay: bold lines extended right, with price/pip labels ----
+// Drawn objects (not plots) so they reach past the last candle into open space,
+// like TradingView's position tool — entry, stop, and target each labeled at the
+// right end with the price and distance in pips.
+var line entryLn  = na
+var line slLn     = na
+var line tpLn     = na
+var label entryLb = na
+var label slLb    = na
+var label tpLb    = na
+var int entryBar  = na
+if anyEntrySignal
+    entryBar := bar_index
+
+line.delete(entryLn)
+line.delete(slLn)
+line.delete(tpLn)
+label.delete(entryLb)
+label.delete(slLb)
+label.delete(tpLb)
+
+activeTrade = inLong or inShort or anyEntrySignal
+if showLevels and activeTrade and not na(entryBar)
+    endX = bar_index + 8
+    entryLn := line.new(entryBar, entryPrice, endX, entryPrice,
+         color=color.new(color.gray, 0), width=1, style=line.style_dashed)
+    entryLb := label.new(endX, entryPrice, "ENTRY  " + str.tostring(entryPrice, format.mintick),
+         style=label.style_label_left, color=color.new(color.gray, 10),
+         textcolor=color.white, size=size.small)
+    if useStopLoss or tradeType == "flag"
+        slLn := line.new(entryBar, stopPrice, endX, stopPrice, color=color.red, width=2)
+        slLb := label.new(endX, stopPrice,
+             "STOP  " + str.tostring(stopPrice, format.mintick) +
+             "  (-" + str.tostring(f_pips(stopPrice - entryPrice), "#.#") + " pips)",
+             style=label.style_label_left, color=color.new(color.red, 10),
+             textcolor=color.white, size=size.small)
+    if useTakeProfit or tradeType == "flag"
+        tpLn := line.new(entryBar, tpPrice, endX, tpPrice, color=color.teal, width=2)
+        tpLb := label.new(endX, tpPrice,
+             "TARGET  " + str.tostring(tpPrice, format.mintick) +
+             "  (+" + str.tostring(f_pips(tpPrice - entryPrice), "#.#") + " pips)",
+             style=label.style_label_left, color=color.new(color.teal, 10),
+             textcolor=color.white, size=size.small)
 
 if showDebug and (longEntrySignal or shortEntrySignal)
     label.new(bar_index, low,
