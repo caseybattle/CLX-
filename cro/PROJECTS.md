@@ -5,7 +5,7 @@ session titles, statuses and their latest summaries. Full transcripts of chats
 started from your computer (Remote Control) can only be read from a trusted device,
 so details below come from each chat's latest summary only.
 
-Last synced: 2026-10-31
+Last synced: 2026-10-31 07:17 ET (morning brief)
 
 ## Waiting on Casey (blocked)
 
@@ -15,6 +15,8 @@ Last synced: 2026-10-31
 | Bash Kings app game | Bash kings app game | 2026-10-30 | Forward Google's Japan payments authorization invite when it arrives (deadline Dec 1) | Direct: in-app payments |
 | Custom TV OS | Custom TV OS design | 2026-10-23 | Enable ADB + unknown sources on Fire TV, send its IP | None found |
 | Trading strategy | Cloud chat history access | 2026-10-05 | Market, account size, platform, trading style | Unclear |
+| Roofer plan (CRO priority?) | Claude Mods guide | 2026-10-31 | Answer: should the revenue officer make the roofer plan its top priority starting tomorrow? | Likely Direct (services); details unclear |
+| Vercel account limits | (Gmail alert, not a chat) | 2026-10-31 | Free tier at 100% of 10 GB deployment storage; 2 domains misconfigured on 1 project | Supporting: sites could go down |
 | Reel analysis | Email information | 2026-10-05 | Run the provided prompt in Gemini with the reel, paste result back | Content |
 
 ## In review / waiting on a platform
@@ -23,7 +25,7 @@ Last synced: 2026-10-31
 |---------|------|-----------------------|--------------|
 | KDP book | kdp | Submitted, in KDP review; edits locked until live | Direct: royalties |
 | Word Pop (Android game) | Android game for Google Play Store | In Google Play review; AdMob linking + ad test after it's live | Direct: ads |
-| Word Pop social kit | Claude Mods guide | 34-image social kit in Google Drive (Word Pop > promo > social) with captions + posting plan | Marketing for Word Pop |
+| Word Pop social kit | Claude Mods guide (earlier) | 34-image social kit in Google Drive (Word Pop > promo > social) with captions + posting plan | Marketing for Word Pop |
 
 ## Done / ready to review
 
