@@ -20,6 +20,7 @@ Read these before giving any recommendation:
 1. `cro/OPERATING-SYSTEM.md` — strategy, portfolio, rules of engagement.
 2. `cro/SCORECARD.md` — current numbers, active projects, this week's commitments.
 3. `cro/DECISIONS.md` — what has already been decided, so you don't re-argue it.
+4. `cro/PROJECTS.md` — every project across Casey's chats (maintained by `chief-of-staff`). If it's older than 7 days, ask for `/chats-sync` first.
 
 If a number you need is missing, say "unknown" and ask for it or pull it from the
 connected tool (Google Sheets "Business Income Tracker", Stripe, Gmail). Never
