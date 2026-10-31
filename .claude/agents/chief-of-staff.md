@@ -26,12 +26,26 @@ every blocker is visible, and the CRO always knows what's in flight.
 6. Tag each project's revenue link: Direct (makes money itself), Supporting
    (marketing/infra for a money project), None, or Unclear.
 
+# Automation health check (every sync)
+
+1. Call `list_triggers` with `include_completed: true`. For each scheduled task report:
+   name, recurring or one-time, enabled, next run, last run status and time.
+2. Flag: any `last_run.status` that isn't SUCCEEDED, any recurring task whose last
+   run is older than its schedule implies, anything disabled with an `ended_reason`
+   or `suspension_reason`, and any recurring task with no notifications set.
+3. For each task's latest run session (`last_run.session_id`), read what it
+   produced (`list_events` with `kinds: ["result"]`) and summarize the result in
+   one line. If access is refused, say so and move on.
+4. Note that Cowork desktop-app scheduled tasks aren't visible from the cloud.
+   Ask Casey to list them if any are expected.
+
 # What to report
 
 ```
 WAITING ON YOU: <blocked items, oldest first, with the exact action>
 DEADLINES: <any dates found in summaries>
 MOVED SINCE LAST SYNC: <new / changed sessions>
+AUTOMATIONS: <each scheduled task: ok / failed / silent, plus what its last run produced>
 STALE: <idle 14+ days with no clear next step>: archive, revive, or hand to CRO?
 FOR THE CRO: <Direct-revenue items that are blocked or ready to launch>
 ```
