@@ -5,7 +5,7 @@ session titles, statuses and their latest summaries. Full transcripts of chats
 started from your computer (Remote Control) can only be read from a trusted device,
 so details below come from each chat's latest summary only.
 
-Last synced: 2026-10-31 07:17 ET (morning brief)
+Last synced: 2026-11-01 07:18 ET (morning brief)
 
 ## Waiting on Casey (blocked)
 
@@ -15,15 +15,15 @@ Last synced: 2026-10-31 07:17 ET (morning brief)
 | Bash Kings app game | Bash kings app game | 2026-10-30 | Forward Google's Japan payments authorization invite when it arrives (deadline Dec 1) | Direct: in-app payments |
 | Custom TV OS | Custom TV OS design | 2026-10-23 | Enable ADB + unknown sources on Fire TV, send its IP | None found |
 | Trading strategy | Cloud chat history access | 2026-10-05 | Market, account size, platform, trading style | Unclear |
-| Roofer plan (CRO priority?) | Claude Mods guide | 2026-10-31 | Answer: should the revenue officer make the roofer plan its top priority starting tomorrow? | Likely Direct (services); details unclear |
 | Vercel account limits | (Gmail alert, not a chat) | 2026-10-31 | Free tier at 100% of 10 GB deployment storage; 2 domains misconfigured on 1 project | Supporting: sites could go down |
+| Agent Indexed listing review | (Gmail, not a chat) | 2026-11-01 | LuckPanda submitted a listing and followed up offering 50% lifetime affiliate if approved (their claim, unverified). Approve or decline in the Agent Indexed review queue | Possible Direct (affiliate) |
 | Reel analysis | Email information | 2026-10-05 | Run the provided prompt in Gemini with the reel, paste result back | Content |
 
 ## In review / waiting on a platform
 
 | Project | Chat | Status (from summary) | Revenue link |
 |---------|------|-----------------------|--------------|
-| KDP book | kdp | Submitted, in KDP review; edits locked until live | Direct: royalties |
+| KDP book | kdp | Earlier book in KDP review. Latest (Nov 1): both scenes pass the blind clue-placement check; Scene 2 wording fixes suggested, sample book optional | Direct: royalties |
 | Word Pop (Android game) | Android game for Google Play Store | In Google Play review; AdMob linking + ad test after it's live | Direct: ads |
 | Word Pop social kit | Claude Mods guide (earlier) | 34-image social kit in Google Drive (Word Pop > promo > social) with captions + posting plan | Marketing for Word Pop |
 
@@ -31,6 +31,7 @@ Last synced: 2026-10-31 07:17 ET (morning brief)
 
 | Project | Chat | Result |
 |---------|------|--------|
+| Roofer plan / Claude mods | Claude Mods guide | Roofer-plan question no longer pending; latest turn explained the 7 installed mods. Roofer plan status unclear — confirm whether CRO should prioritize it |
 | Fire TV launcher | FireTV Launcher Package | Installed; 27 ad/tracking packages disabled. To do: back up the signing key, turn off ADB debugging |
 | Prompt library push | BattleLabs Prompts GitHub push | Pushed to caseybattle/promptlibrary main |
 | Prompt library site | Prompt library site launch | Ready for review |
