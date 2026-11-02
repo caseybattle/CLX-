@@ -5,7 +5,7 @@ session titles, statuses and their latest summaries. Full transcripts of chats
 started from your computer (Remote Control) can only be read from a trusted device,
 so details below come from each chat's latest summary only.
 
-Last synced: 2026-11-01 07:18 ET (morning brief)
+Last synced: 2026-11-02 07:28 ET (morning brief)
 
 ## Waiting on Casey (blocked)
 
@@ -17,13 +17,16 @@ Last synced: 2026-11-01 07:18 ET (morning brief)
 | Trading strategy | Cloud chat history access | 2026-10-05 | Market, account size, platform, trading style | Unclear |
 | Vercel account limits | (Gmail alert, not a chat) | 2026-10-31 | Free tier at 100% of 10 GB deployment storage; 2 domains misconfigured on 1 project | Supporting: sites could go down |
 | Agent Indexed listing review | (Gmail, not a chat) | 2026-11-01 | LuckPanda submitted a listing and followed up offering 50% lifetime affiliate if approved (their claim, unverified). Approve or decline in the Agent Indexed review queue | Possible Direct (affiliate) |
+| YouTube channel ideas | Viral YouTube channel ideas (new, Nov 1) | 2026-11-02 | Pick which concept is next | Supporting: content/lead engine |
+| KDP scene book | kdp | 2026-11-02 | scene_book_1_32.pdf built (96 pages, 84 MB). Say go on front matter or name a different order | Direct: royalties |
+| Honkle: Bus Jam Word Puzzle (Google Play) | (Gmail: Testers Community) | 2026-11-02 | Closed-testing feedback report + production access answers arrived. Review and apply for production | Direct: app revenue |
 | Reel analysis | Email information | 2026-10-05 | Run the provided prompt in Gemini with the reel, paste result back | Content |
 
 ## In review / waiting on a platform
 
 | Project | Chat | Status (from summary) | Revenue link |
 |---------|------|-----------------------|--------------|
-| KDP book | kdp | Earlier book in KDP review. Latest (Nov 1): both scenes pass the blind clue-placement check; Scene 2 wording fixes suggested, sample book optional | Direct: royalties |
+| KDP book (earlier) | kdp | Earlier book in KDP review; edits locked until live | Direct: royalties |
 | Word Pop (Android game) | Android game for Google Play Store | In Google Play review; AdMob linking + ad test after it's live | Direct: ads |
 | Word Pop social kit | Claude Mods guide (earlier) | 34-image social kit in Google Drive (Word Pop > promo > social) with captions + posting plan | Marketing for Word Pop |
 
