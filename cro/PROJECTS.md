@@ -5,7 +5,7 @@ session titles, statuses and their latest summaries. Full transcripts of chats
 started from your computer (Remote Control) can only be read from a trusted device,
 so details below come from each chat's latest summary only.
 
-Last synced: 2026-11-03 07:19 ET (morning brief)
+Last synced: 2026-11-04 07:20 ET (morning brief)
 
 ## Waiting on Casey (blocked)
 
@@ -17,7 +17,7 @@ Last synced: 2026-11-03 07:19 ET (morning brief)
 | Trading strategy | Cloud chat history access | 2026-10-05 | Market, account size, platform, trading style | Unclear |
 | Vercel account limits | (Gmail alert, not a chat) | 2026-10-31 | Free tier at 100% of 10 GB deployment storage; 2 domains misconfigured on 1 project | Supporting: sites could go down |
 | Agent Indexed listing review | (Gmail, not a chat) | 2026-11-01 | LuckPanda submitted a listing and followed up offering 50% lifetime affiliate if approved (their claim, unverified). Approve or decline in the Agent Indexed review queue | Possible Direct (affiliate) |
-| YouTube channel ideas | Viral YouTube channel ideas | 2026-11-03 | Confirm stick-man style (plain white figure, or hat/glasses/expressive face; default: plain figure, expressive face, distinct color) | Supporting: content/lead engine |
+| YouTube channel ideas (Episode 1 in production) | Viral YouTube channel ideas | 2026-11-04 | Generate voiceover clips s3a–s3h in the "Alex" voice and save to ep01-video/assets/vo-alex/ (or confirm s3_1–s3_8 naming) | Supporting: content/lead engine |
 | KDP (new chat, Nov 2) | kdp | 2026-11-03 | Asks: do you want its proposed option, or wait and resume the full pull slowly overnight? (details only in that chat) | Direct: royalties |
 | KDP word-search pilot | kdp (old chat, now archived) | 2026-11-02 | Spec saved to SPEC-WORDSEARCH.md, no pages built. Pick a new village setting for a 3-case pilot, or keep Hotel Larkspur. Scene book PDF (96 pages) was built earlier | Direct: royalties |
 | Honkle: Bus Jam Word Puzzle (Google Play) | (Gmail: Testers Community) | 2026-11-02 | Closed-testing feedback report + production access answers arrived. Review and apply for production | Direct: app revenue |
