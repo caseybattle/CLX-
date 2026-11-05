@@ -5,7 +5,7 @@ session titles, statuses and their latest summaries. Full transcripts of chats
 started from your computer (Remote Control) can only be read from a trusted device,
 so details below come from each chat's latest summary only.
 
-Last synced: 2026-11-04 07:20 ET (morning brief)
+Last synced: 2026-11-05 07:19 ET (morning brief)
 
 ## Waiting on Casey (blocked)
 
@@ -17,8 +17,8 @@ Last synced: 2026-11-04 07:20 ET (morning brief)
 | Trading strategy | Cloud chat history access | 2026-10-05 | Market, account size, platform, trading style | Unclear |
 | Vercel account limits | (Gmail alert, not a chat) | 2026-10-31 | Free tier at 100% of 10 GB deployment storage; 2 domains misconfigured on 1 project | Supporting: sites could go down |
 | Agent Indexed listing review | (Gmail, not a chat) | 2026-11-01 | LuckPanda submitted a listing and followed up offering 50% lifetime affiliate if approved (their claim, unverified). Approve or decline in the Agent Indexed review queue | Possible Direct (affiliate) |
-| YouTube channel ideas (Episode 1 in production) | Viral YouTube channel ideas | 2026-11-04 | Generate voiceover clips s3a–s3h in the "Alex" voice and save to ep01-video/assets/vo-alex/ (or confirm s3_1–s3_8 naming) | Supporting: content/lead engine |
-| KDP (new chat, Nov 2) | kdp | 2026-11-03 | Asks: do you want its proposed option, or wait and resume the full pull slowly overnight? (details only in that chat) | Direct: royalties |
+| YouTube channel ideas (Episode 1 in production) | Viral YouTube channel ideas | 2026-11-05 | Scene 4.1 clip (46s) delivered; still frames checked, motion timing not verified. Review the clip | Supporting: content/lead engine |
+| KDP (new chat, Nov 2) | kdp | 2026-11-04 | **Last turn FAILED** (Nov 4, 8:31am ET) while it was waiting on you about resuming "the full pull". Open the chat and retry | Direct: royalties |
 | KDP word-search pilot | kdp (old chat, now archived) | 2026-11-02 | Spec saved to SPEC-WORDSEARCH.md, no pages built. Pick a new village setting for a 3-case pilot, or keep Hotel Larkspur. Scene book PDF (96 pages) was built earlier | Direct: royalties |
 | Honkle: Bus Jam Word Puzzle (Google Play) | (Gmail: Testers Community) | 2026-11-02 | Closed-testing feedback report + production access answers arrived. Review and apply for production | Direct: app revenue |
 | Reel analysis | Email information | 2026-10-05 | Run the provided prompt in Gemini with the reel, paste result back | Content |
@@ -27,6 +27,7 @@ Last synced: 2026-11-04 07:20 ET (morning brief)
 
 | Project | Chat | Status (from summary) | Revenue link |
 |---------|------|-----------------------|--------------|
+| Ad videos (Instagram/Facebook) | Video transcript to AI agent instructions (new, Nov 5) | D-snowy-brain-teaser.mp4 and E-emergency-rush.mp4 added to "08 Ad Videos" (9:16, 13.5s). 4:5 Facebook versions not made. Earlier chat added a Blender + HyperFrames phase to short-form-video-editor.md (untested) | Supporting: ads (product unclear, likely Word Pop) |
 | KDP book (earlier) | kdp | Earlier book in KDP review; edits locked until live | Direct: royalties |
 | Word Pop (Android game) | Android game for Google Play Store | In Google Play review; AdMob linking + ad test after it's live | Direct: ads |
 | Word Pop social kit | Claude Mods guide (earlier) | 34-image social kit in Google Drive (Word Pop > promo > social) with captions + posting plan | Marketing for Word Pop |
