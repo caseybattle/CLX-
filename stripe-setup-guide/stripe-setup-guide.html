@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Stripe Account Setup Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Great+Vibes&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --black:#0d0d0d; --red:#c0181a; --red-lite:#fff4f4; --gold:#c9a028; --gold-mid:#d4a832;
+    --gold-text:#a07414; --gold-lite:#fdfaf2; --paper:#fefcf8; --rule:#e8e4dc; --dark:#1c1c1c;
+    --mid:#222; --light:#555; --green:#1a6b35; --green-lite:#f1f8f3; --ui-blue:#635bff; --ui-line:#d8dbe2; --ui-bg:#f6f8fa;
+  }
+  @page{ size: letter; margin:0; }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; background:var(--paper); }
+  body{ font-family:'Poppins',sans-serif; color:var(--mid); font-size:9.2pt; line-height:1.5; -webkit-print-color-adjust:exact; print-color-adjust:exact; }
+  .page{ width:8.5in; height:11in; padding:0.55in 0.7in 0.5in; position:relative; overflow:hidden; page-break-after:always; background:var(--paper); display:flex; flex-direction:column; }
+  .page:last-child{ page-break-after:auto; }
+  .content{ flex:1; }
+
+  /* header / footer */
+  .hdr{ display:flex; justify-content:space-between; align-items:flex-end; padding-bottom:6px; border-bottom:0.75pt solid var(--gold-mid); }
+  .hdr .brand{ font-family:'Great Vibes',cursive; font-size:22pt; color:var(--red); line-height:1; }
+  .hdr .tag{ font-size:6.5pt; letter-spacing:.14em; color:var(--light); text-transform:uppercase; }
+  .hdr .right{ text-align:right; font-size:7pt; letter-spacing:.12em; color:var(--light); text-transform:uppercase; }
+  .hdr .right b{ display:block; font-family:'Cormorant Garamond',serif; font-size:12.5pt; letter-spacing:0; text-transform:none; color:var(--dark); font-weight:600; }
+  .softrule{ border-top:0.5pt solid var(--rule); margin-top:2px; margin-bottom:14px; }
+  .ftr{ border-top:0.75pt solid var(--gold-mid); padding-top:5px; text-align:center; margin-top:4px; position:relative; }
+  .ftr:before{ content:""; position:absolute; left:0; right:0; top:2px; border-top:0.5pt solid var(--rule); }
+  .ftr .brand{ font-family:'Great Vibes',cursive; font-size:15pt; color:var(--red); line-height:1.1; }
+  .ftr .small{ font-size:6.5pt; color:var(--light); letter-spacing:.12em; text-transform:uppercase; }
+  .ftr .pg{ position:absolute; right:0; top:10px; font-size:7pt; color:var(--light); }
+
+  /* type */
+  .sec{ font-size:7pt; letter-spacing:.2em; color:var(--red); text-transform:uppercase; margin:0 0 4px; font-weight:500; }
+  h1{ font-family:'Cormorant Garamond',serif; font-weight:700; font-size:34pt; line-height:1.02; color:var(--dark); margin:0 0 6px; }
+  h2{ font-family:'Cormorant Garamond',serif; font-weight:700; font-size:22pt; line-height:1.1; color:var(--dark); margin:0 0 4px; }
+  h3{ font-family:'Cormorant Garamond',serif; font-weight:600; font-size:14pt; color:var(--dark); margin:0 0 3px; line-height:1.2; }
+  .tagline{ font-family:'Cormorant Garamond',serif; font-style:italic; font-size:13pt; color:var(--light); margin:0 0 12px; }
+  .why{ font-family:'Cormorant Garamond',serif; font-style:italic; font-size:11pt; color:var(--gold-text); }
+  p{ margin:0 0 7px; }
+  b, strong{ color:var(--dark); font-weight:600; }
+  ol.steps, ul.ticks{ margin:4px 0 8px; padding-left:0; list-style:none; counter-reset:s; }
+  ol.steps li{ counter-increment:s; position:relative; padding-left:24px; margin-bottom:5px; }
+  ol.steps li:before{ content:counter(s); position:absolute; left:0; top:1px; width:16px; height:16px; border-radius:50%; background:var(--black); color:#fff; font-size:7.5pt; font-weight:600; text-align:center; line-height:16px; }
+  ul.ticks li{ position:relative; padding-left:18px; margin-bottom:3px; }
+  ul.ticks li:before{ content:""; position:absolute; left:2px; top:6px; width:7px; height:7px; background:var(--gold-mid); transform:rotate(45deg); }
+  .btn{ display:inline-block; background:var(--ui-blue); color:#fff; font-weight:600; font-size:8pt; padding:1px 8px; border-radius:4px; white-space:nowrap; }
+  .url{ font-family:'Poppins',sans-serif; font-weight:600; color:var(--dark); background:var(--gold-lite); border:0.5pt solid var(--gold-mid); padding:0 5px; border-radius:3px; white-space:nowrap; }
+
+  /* step banner */
+  .stepbar{ display:flex; align-items:center; gap:12px; margin:0 0 8px; }
+  .stepnum{ flex:none; width:44px; height:44px; background:var(--black); color:#fff; display:flex; flex-direction:column; align-items:center; justify-content:center; border-top:2pt solid var(--gold-mid); }
+  .stepnum small{ font-size:5.5pt; letter-spacing:.18em; color:var(--gold); line-height:1; }
+  .stepnum span{ font-family:'Cormorant Garamond',serif; font-weight:700; font-size:20pt; line-height:1; }
+  .stepbar h2{ margin:0; }
+  .stepbar .time{ font-size:7.5pt; color:var(--light); }
+
+  .two{ display:grid; grid-template-columns: 1fr 1fr; gap:18px; align-items:start; }
+  .two.wide-left{ grid-template-columns: 1.1fr 0.9fr; }
+  .block{ margin-bottom:14px; }
+
+  /* boxes */
+  .cat{ background:var(--gold-lite); border-left:2pt solid var(--gold-mid); border-right:2pt solid var(--gold-mid); padding:9px 12px; margin:6px 0 10px; }
+  .cat h3{ font-size:13pt; }
+  .warn{ background:var(--red-lite); border:0.5pt solid var(--red); border-top:2pt solid var(--red); padding:8px 12px; margin:6px 0 10px; }
+  .warn h3{ color:var(--red); font-size:12pt; }
+  .ok{ background:var(--green-lite); border:0.5pt solid var(--green); border-top:2pt solid var(--green); padding:8px 12px; margin:6px 0 10px; }
+  .ok h3{ color:var(--green); font-size:12pt; }
+  .tip{ border-left:2pt solid var(--gold-mid); padding:2px 0 2px 10px; margin:6px 0 10px; }
+  .caption{ font-size:7pt; color:var(--light); text-align:center; margin-top:4px; font-style:italic; }
+
+  /* mock UI */
+  .mock{ background:#fff; border:1px solid var(--ui-line); border-radius:8px; box-shadow:0 3px 10px rgba(0,0,0,.07); overflow:hidden; font-family:'Poppins',sans-serif; }
+  .mock .chrome{ background:#eceef1; padding:5px 8px; display:flex; align-items:center; gap:4px; border-bottom:1px solid var(--ui-line); }
+  .mock .chrome i{ width:7px; height:7px; border-radius:50%; background:#c9ccd2; display:inline-block; }
+  .mock .chrome .addr{ margin-left:8px; flex:1; background:#fff; border-radius:4px; font-size:6.5pt; color:#444; padding:1px 7px; }
+  .mock .body{ padding:12px 14px; }
+  .mock .ttl{ font-weight:600; font-size:10pt; color:#1a1f36; margin-bottom:6px; }
+  .mock .sub{ font-size:7pt; color:#555; margin-bottom:8px; }
+  .fld{ margin-bottom:6px; position:relative; }
+  .fld label{ display:block; font-size:6.5pt; font-weight:600; color:#3c4257; margin-bottom:2px; }
+  .fld .in{ border:1px solid var(--ui-line); border-radius:5px; padding:3px 7px; font-size:7.5pt; color:#1a1f36; background:#fff; min-height:19px; }
+  .fld .in.ph{ color:#8a8f9c; }
+  .fld .in.sel:after{ content:"\25BE"; float:right; color:#8a8f9c; }
+  .mbtn{ background:var(--ui-blue); color:#fff; text-align:center; font-weight:600; font-size:8pt; border-radius:5px; padding:5px; margin-top:8px; }
+  .callout{ position:absolute; right:-10px; top:-3px; width:17px; height:17px; border-radius:50%; background:var(--red); color:#fff; font-size:7.5pt; font-weight:700; text-align:center; line-height:17px; box-shadow:0 0 0 2px #fff; }
+  .hl{ outline:2px solid var(--red); outline-offset:1px; }
+  .radio{ border:1px solid var(--ui-line); border-radius:6px; padding:5px 8px; font-size:7.5pt; margin-bottom:5px; display:flex; gap:7px; align-items:flex-start; color:#1a1f36; }
+  .radio .dot{ flex:none; width:10px; height:10px; border-radius:50%; border:1.5px solid #8a8f9c; margin-top:2px; }
+  .radio.on{ border-color:var(--ui-blue); background:#f5f4ff; }
+  .radio.on .dot{ border-color:var(--ui-blue); background:radial-gradient(var(--ui-blue) 45%, #fff 50%); }
+  .radio small{ display:block; color:#555; font-size:6.5pt; }
+  .legend{ font-size:8.4pt; }
+  .legend .n{ display:inline-block; width:15px; height:15px; border-radius:50%; background:var(--red); color:#fff; font-size:7pt; font-weight:700; text-align:center; line-height:15px; margin-right:5px; }
+  .legend div{ margin-bottom:5px; padding-left:20px; text-indent:-20px; }
+
+  .navmock{ display:flex; }
+  .navmock .side{ width:31%; background:var(--ui-bg); border-right:1px solid var(--ui-line); padding:8px; font-size:6.8pt; color:#3c4257; }
+  .navmock .side div{ padding:2px 4px; margin-bottom:2px; border-radius:3px; }
+  .navmock .main{ flex:1; padding:10px 12px; }
+  .banner{ background:#f5f4ff; border:1px solid #c9c6ff; border-radius:6px; padding:7px 9px; font-size:7pt; color:#1a1f36; display:flex; justify-content:space-between; align-items:center; gap:8px; }
+  .banner .b{ background:var(--ui-blue); color:#fff; padding:2px 8px; border-radius:4px; font-weight:600; white-space:nowrap; }
+  .skel{ height:6px; background:#eceef1; border-radius:3px; margin:6px 0; }
+  .toggle{ display:inline-block; width:22px; height:12px; border-radius:6px; background:#c9ccd2; vertical-align:middle; position:relative; }
+  .toggle:after{ content:""; position:absolute; left:2px; top:2px; width:8px; height:8px; border-radius:50%; background:#fff; }
+
+  .stmt{ background:#fff; border:1px solid var(--ui-line); border-radius:6px; font-size:7.2pt; overflow:hidden; }
+  .stmt .h{ background:#1c1c1c; color:#fff; padding:4px 9px; font-weight:600; font-size:7pt; letter-spacing:.06em; }
+  .stmt .r{ display:flex; justify-content:space-between; padding:4px 9px; border-top:1px solid #eee; }
+  .stmt .r.me{ background:#fffbe9; font-weight:600; color:#1c1c1c; }
+
+  /* tables */
+  table.t{ width:100%; border-collapse:collapse; font-size:8.4pt; margin:4px 0 10px; }
+  table.t th{ text-align:left; font-family:'Cormorant Garamond',serif; font-weight:600; font-size:11pt; color:var(--dark); background:var(--gold-lite); padding:5px 8px; border-bottom:0.75pt solid var(--gold-mid); }
+  table.t td{ padding:5px 8px; border-bottom:0.5pt solid var(--rule); vertical-align:top; }
+  table.t td:first-child{ font-weight:600; color:var(--dark); width:32%; }
+  table.t.check td:first-child{ width:22px; padding-right:0; }
+  .box{ display:inline-block; width:11px; height:11px; border:1.2px solid var(--dark); border-radius:2px; }
+
+  /* cover */
+  .cover .hero{ background:var(--black); color:#fff; margin:14px -0.7in 0; padding:34px 0.7in 30px; border-top:2pt solid var(--gold-mid); border-bottom:2pt solid var(--gold-mid); }
+  .cover .hero .sec{ color:var(--gold); }
+  .cover .hero h1{ color:#fff; font-size:44pt; }
+  .cover .hero .tagline{ color:#e9e2cf; margin:0; }
+  .stats{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:18px 0 14px; }
+  .stat{ border:0.5pt solid var(--rule); border-top:2pt solid var(--gold-mid); background:#fff; padding:9px 11px; }
+  .stat .v{ font-family:'Cormorant Garamond',serif; font-weight:700; font-size:22pt; color:var(--dark); line-height:1; }
+  .stat .l{ font-size:7.5pt; color:var(--light); }
+  .map{ display:grid; grid-template-columns:repeat(5,1fr); gap:6px; margin:6px 0 12px; }
+  .map div{ background:#fff; border:0.5pt solid var(--rule); border-left:2pt solid var(--gold-mid); padding:6px 7px; font-size:7.4pt; line-height:1.35; }
+  .map div b{ display:block; font-family:'Cormorant Garamond',serif; font-size:15pt; line-height:1; color:var(--red); }
+</style>
+</head>
+<body>
+
+<!-- ================= PAGE 1: COVER ================= -->
+<section class="page cover">
+  <div class="hdr">
+    <div><div class="brand">BattleLabs.co</div><div class="tag">Web Design · Digital Development · Brand Strategy</div></div>
+    <div class="right">Client Setup Guide<b>Stripe Payments</b>November 2026</div>
+  </div>
+  <div class="softrule"></div>
+  <div class="content">
+    <div class="hero">
+      <div class="sec">Step-by-step · Illustrated · Beginner friendly</div>
+      <h1>Setting Up Your<br>Stripe Account</h1>
+      <p class="tagline">Everything you need to go from “no account” to “ready to get paid,” one screen at a time.</p>
+    </div>
+
+    <div class="stats">
+      <div class="stat"><div class="v">20–30 min</div><div class="l">Typical time if you have your info ready (Page 2)</div></div>
+      <div class="stat"><div class="v">9 steps</div><div class="l">Each step has a picture of what you’ll see and what to type</div></div>
+      <div class="stat"><div class="v">$0</div><div class="l">Stripe charges no fee to open an account; fees apply only when you get paid</div></div>
+    </div>
+
+    <div class="sec">What is Stripe?</div>
+    <p>Stripe is the company that lets your business accept card payments (and Apple Pay, Google Pay, bank payments and more) on your website, through invoices, or through payment links. When a customer pays you, Stripe holds the money briefly, then deposits it into <b>your business bank account</b> automatically.</p>
+
+    <div class="sec" style="margin-top:10px">The road map</div>
+    <div class="map">
+      <div><b>1–2</b>Create your login &amp; verify your email</div>
+      <div><b>3–4</b>Start activation &amp; describe your business</div>
+      <div><b>5–6</b>Your personal details &amp; what customers see</div>
+      <div><b>7–8</b>Connect your bank &amp; lock down your login</div>
+      <div><b>9</b>Review, submit, and you’re live</div>
+    </div>
+
+    <div class="tip">
+      <p class="why" style="margin:0">“Go slowly and type everything exactly as it appears on your official documents. Most delays happen because a name, address or tax number doesn’t match what the IRS or your bank has on file.”</p>
+    </div>
+
+    <div class="warn">
+      <h3>Before you begin: about the pictures in this guide</h3>
+      <p style="margin:0">The screen pictures in this guide are <b>simplified illustrations</b>, not real screenshots. Stripe updates its design often, so your screen may look a little different, with buttons in slightly different places or worded slightly differently. The <b>information it asks for stays the same</b>. If something looks different, look for the closest matching button or field.</p>
+    </div>
+  </div>
+  <div class="ftr"><div class="brand">BattleLabs.co</div><div class="small">Questions? Call (678) 349-8808</div><div class="pg">1</div></div>
+</section>
+
+<!-- ================= PAGE 2: GATHER INFO ================= -->
+<section class="page">
+  <div class="hdr">
+    <div><div class="brand">BattleLabs.co</div><div class="tag">Web Design · Digital Development · Brand Strategy</div></div>
+    <div class="right">Stripe Setup Guide<b>Before You Start</b></div>
+  </div>
+  <div class="softrule"></div>
+  <div class="content">
+    <div class="sec">Do this first · 10 minutes</div>
+    <h2>Gather Everything Before You Click Anything</h2>
+    <p class="tagline" style="margin-bottom:8px">Having this list on the table beside you is the single biggest time-saver.</p>
+
+    <table class="t">
+      <tr><th style="width:32%">What you need</th><th>Details &amp; where to find it</th></tr>
+      <tr><td>An email address you check</td><td>Ideally your business email. Stripe sends your verification link and all important notices here.</td></tr>
+      <tr><td>A mobile phone</td><td>For a text-message code and to set up login security (Step 8).</td></tr>
+      <tr><td>Your business type</td><td>Are you a <b>sole proprietor / individual</b>, an <b>LLC</b>, a <b>corporation</b>, or a <b>nonprofit</b>? Check your formation papers or last tax return. Not sure? See Step 4.</td></tr>
+      <tr><td>Legal business name</td><td>Exactly as registered with the IRS (look on your EIN letter or tax return), e.g. “Smith Bakery LLC,” not just “Smith’s.”</td></tr>
+      <tr><td>Tax ID number</td><td><b>EIN</b> (9 digits, XX-XXXXXXX) if your business has one. Sole proprietors and many single-member LLCs can use their <b>Social Security Number</b>. Your latest W-9 or tax return shows which one your business uses.</td></tr>
+      <tr><td>Business address &amp; phone</td><td>Where your business operates. A home address is fine for home-based businesses.</td></tr>
+      <tr><td>Your website or social page</td><td>Your website address. If you don’t have one yet, a social media business page or a short description of what you sell works.</td></tr>
+      <tr><td>Your personal details</td><td>Legal first &amp; last name, date of birth, home address, and your Social Security Number (Stripe usually asks for the last 4 digits first, and may ask for all 9).</td></tr>
+      <tr><td>Bank account for deposits</td><td>Either your online-banking login (fastest) <b>or</b> your 9-digit <b>routing number</b> and <b>account number</b>, found on a check or in your bank app. Use a business checking account if you have one.</td></tr>
+      <tr><td>Photo ID (just in case)</td><td>A valid, unexpired driver’s license or passport. Stripe only asks for this if it can’t confirm your identity automatically.</td></tr>
+      <tr><td>Owners’ info (LLCs &amp; corporations only)</td><td>Name, date of birth, address and SSN for anyone who owns 25% or more of the company.</td></tr>
+    </table>
+
+    <div class="two">
+      <div class="ok">
+        <h3>Good to know</h3>
+        <ul class="ticks" style="margin:0">
+          <li>You can <b>stop and come back</b> any time. Stripe saves your progress.</li>
+          <li>Use a <b>laptop or desktop</b> if possible. It’s easier to read and type.</li>
+          <li>Use Chrome, Safari, Edge or Firefox, kept up to date.</li>
+        </ul>
+      </div>
+      <div class="warn">
+        <h3>Protect yourself</h3>
+        <ul class="ticks" style="margin:0">
+          <li>Only type your info on pages whose address ends in <b>stripe.com</b> with the padlock icon.</li>
+          <li>Stripe will <b>never</b> call, text or email asking for your password or codes.</li>
+          <li>Never share your password, even with us.</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><div class="brand">BattleLabs.co</div><div class="small">Questions? Call (678) 349-8808</div><div class="pg">2</div></div>
+</section>
+
+<!-- ================= PAGE 3: STEP 1 & 2 ================= -->
+<section class="page">
+  <div class="hdr">
+    <div><div class="brand">BattleLabs.co</div><div class="tag">Web Design · Digital Development · Brand Strategy</div></div>
+    <div class="right">Stripe Setup Guide<b>Steps 1 – 2</b></div>
+  </div>
+  <div class="softrule"></div>
+  <div class="content">
+    <div class="block">
+      <div class="stepbar"><div class="stepnum"><small>STEP</small><span>1</span></div><div><h2>Create Your Stripe Login</h2><div class="time">About 2 minutes</div></div></div>
+      <div class="two wide-left">
+        <div>
+          <ol class="steps">
+            <li>Open your web browser and type this address exactly: <span class="url">dashboard.stripe.com/register</span></li>
+            <li><b>Email</b>: type the business email you want to use. <span class="legend"><span class="n">1</span></span></li>
+            <li><b>Full name</b>: your first and last name. <span class="legend"><span class="n">2</span></span></li>
+            <li><b>Country</b>: choose <b>United States</b> (or the country where your business is legally based). <span class="legend"><span class="n">3</span></span></li>
+            <li><b>Password</b>: make it long (12+ characters) and <b>not used on any other site</b>. Write it down somewhere safe. <span class="legend"><span class="n">4</span></span></li>
+            <li>Click <span class="btn">Create account</span>. <span class="legend"><span class="n">5</span></span></li>
+          </ol>
+          <div class="warn" style="margin-top:8px">
+            <h3>Choose the country carefully</h3>
+            <p style="margin:0">Once your account is activated, Stripe <b>does not let you change the country</b>. Picking the wrong one means starting over with a new account.</p>
+          </div>
+        </div>
+        <div>
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><div class="addr">🔒 dashboard.stripe.com/register</div></div>
+            <div class="body">
+              <div class="ttl">Create your Stripe account</div>
+              <div class="fld"><label>Email</label><div class="in">you@yourbusiness.com</div><span class="callout">1</span></div>
+              <div class="fld"><label>Full name</label><div class="in">Jordan Smith</div><span class="callout">2</span></div>
+              <div class="fld"><label>Country</label><div class="in sel">United States</div><span class="callout">3</span></div>
+              <div class="fld"><label>Password</label><div class="in">••••••••••••••</div><span class="callout">4</span></div>
+              <div class="fld"><div class="mbtn">Create account</div><span class="callout" style="top:6px">5</span></div>
+            </div>
+          </div>
+          <div class="caption">Illustration. Your screen may look slightly different.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="stepbar"><div class="stepnum"><small>STEP</small><span>2</span></div><div><h2>Verify Your Email Address</h2><div class="time">About 1 minute</div></div></div>
+      <div class="two wide-left">
+        <div>
+          <ol class="steps">
+            <li>Open your email inbox (the same email you used in Step 1).</li>
+            <li>Find the email from <b>Stripe</b> asking you to verify your email address. Not there after 5 minutes? Check your <b>Spam</b>, <b>Junk</b> or <b>Promotions</b> folder.</li>
+            <li>Click the <span class="btn">Verify email address</span> button inside the email.</li>
+            <li>A browser tab opens and takes you to your Stripe <b>Dashboard</b> (your account’s home screen). Keep this tab open for Step 3.</li>
+          </ol>
+          <div class="tip"><p class="why" style="margin:0">“Stripe may first ask a few quick questions about what you plan to do with Stripe. Answer them as best you can. You can’t get them wrong, and you can skip any that don’t apply.”</p></div>
+        </div>
+        <div>
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><div class="addr">Inbox</div></div>
+            <div class="body">
+              <div style="font-size:6.8pt;color:#555">From: <b style="color:#1a1f36">Stripe</b></div>
+              <div class="ttl" style="margin-top:2px">Please verify your email</div>
+              <div class="skel" style="width:90%"></div><div class="skel" style="width:75%"></div>
+              <div class="fld"><div class="mbtn hl" style="width:70%;margin:8px auto 4px">Verify email address</div></div>
+              <div class="skel" style="width:60%"></div>
+            </div>
+          </div>
+          <div class="caption">Illustration of the verification email.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><div class="brand">BattleLabs.co</div><div class="small">Questions? Call (678) 349-8808</div><div class="pg">3</div></div>
+</section>
+
+<!-- ================= PAGE 4: STEP 3 & 4 ================= -->
+<section class="page">
+  <div class="hdr">
+    <div><div class="brand">BattleLabs.co</div><div class="tag">Web Design · Digital Development · Brand Strategy</div></div>
+    <div class="right">Stripe Setup Guide<b>Steps 3 – 4</b></div>
+  </div>
+  <div class="softrule"></div>
+  <div class="content">
+    <div class="block">
+      <div class="stepbar"><div class="stepnum"><small>STEP</small><span>3</span></div><div><h2>Start Activating Your Account</h2><div class="time">About 1 minute</div></div></div>
+      <div class="two wide-left">
+        <div>
+          <p>Your new account starts in <b>test mode</b> (a “sandbox”): you can look around, but can’t accept real money yet. To turn on real payments, Stripe needs to verify your business.</p>
+          <ol class="steps">
+            <li>On your Dashboard, look for a banner or button that says something like <span class="btn">Activate payments</span>, <span class="btn">Complete your profile</span> or <span class="btn">Verify your business</span>, and click it.</li>
+            <li><b>Can’t find it?</b> Type this address directly into your browser: <span class="url">dashboard.stripe.com/account/onboarding</span></li>
+          </ol>
+          <p class="why" style="margin:0">“Next comes a short series of screens. Click <b>Continue</b> at the bottom of each one.”</p>
+        </div>
+        <div>
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><div class="addr">🔒 dashboard.stripe.com</div></div>
+            <div class="navmock">
+              <div class="side"><div style="font-weight:600;color:#1a1f36">Your business</div><div>Home</div><div>Balances</div><div>Transactions</div><div>Customers</div><div>Products</div></div>
+              <div class="main">
+                <div class="banner hl"><span>You’re in a sandbox. Verify your business to accept live payments.</span><span class="b">Activate</span></div>
+                <div class="skel" style="width:60%;margin-top:10px"></div><div class="skel" style="width:85%"></div>
+              </div>
+            </div>
+          </div>
+          <div class="caption">Illustration. Button wording varies.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block" style="margin-bottom:0">
+      <div class="stepbar"><div class="stepnum"><small>STEP</small><span>4</span></div><div><h2>Tell Stripe About Your Business</h2><div class="time">About 5 minutes</div></div></div>
+      <div class="two wide-left">
+        <div>
+          <p><b>A. Business location &amp; type.</b> Confirm your country and choose the option that matches how your business is legally set up:</p>
+          <table class="t" style="font-size:7.8pt">
+            <tr><th style="font-size:10pt">If you are…</th><th style="font-size:10pt">Choose</th></tr>
+            <tr><td>Just you, no LLC or corporation filed</td><td><b>Individual / Sole proprietorship</b></td></tr>
+            <tr><td>An LLC, S-Corp or C-Corp</td><td><b>Company</b>, then pick your exact type</td></tr>
+            <tr><td>A registered 501(c) charity</td><td><b>Nonprofit</b></td></tr>
+          </table>
+          <p><b>B. Business details.</b> Enter your <b>legal business name</b>, <b>EIN</b> (or SSN if you’re a sole proprietor), <b>business address</b> and <b>phone</b>.</p>
+          <p><b>C. Industry &amp; website.</b> Pick the closest industry, then enter your website. No website? Use your social media business page, or pick the no-website option and briefly describe what you sell.</p>
+          <div class="warn" style="margin-bottom:0"><h3>Must match the IRS exactly</h3><p style="margin:0">Legal name + EIN must match your IRS records <b>letter for letter</b> (including “LLC” or “Inc.”). A mismatch is the #1 reason verification gets stuck.</p></div>
+        </div>
+        <div>
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><div class="addr">🔒 dashboard.stripe.com/account/onboarding</div></div>
+            <div class="body">
+              <div class="ttl">Tell us about your business</div>
+              <div class="fld"><label>Type of business</label></div>
+              <div class="radio on"><span class="dot"></span><div>Individual / Sole proprietorship<small>Uses your SSN</small></div></div>
+              <div class="radio"><span class="dot"></span><div>Company<small>LLC, corporation, partnership</small></div></div>
+              <div class="radio"><span class="dot"></span><div>Nonprofit organization</div></div>
+              <div class="fld" style="margin-top:6px"><label>Legal business name</label><div class="in">Smith Bakery LLC</div></div>
+              <div class="fld"><label>Employer Identification Number (EIN)</label><div class="in ph">XX-XXXXXXX</div></div>
+              <div class="mbtn">Continue</div>
+            </div>
+          </div>
+          <div class="caption">Illustration. Fields appear across one or more screens.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><div class="brand">BattleLabs.co</div><div class="small">Questions? Call (678) 349-8808</div><div class="pg">4</div></div>
+</section>
+
+<!-- ================= PAGE 5: STEP 5 & 6 ================= -->
+<section class="page">
+  <div class="hdr">
+    <div><div class="brand">BattleLabs.co</div><div class="tag">Web Design · Digital Development · Brand Strategy</div></div>
+    <div class="right">Stripe Setup Guide<b>Steps 5 – 6</b></div>
+  </div>
+  <div class="softrule"></div>
+  <div class="content">
+    <div class="block">
+      <div class="stepbar"><div class="stepnum"><small>STEP</small><span>5</span></div><div><h2>Verify Yourself (Personal Details)</h2><div class="time">About 3 minutes</div></div></div>
+      <div class="two wide-left">
+        <div>
+          <p>By law (“Know Your Customer” rules), Stripe must confirm the real person behind every account. This information is <b>kept private</b> and is <b>not</b> shown to customers.</p>
+          <ol class="steps">
+            <li><b>Legal first and last name</b>, as on your driver’s license.</li>
+            <li><b>Email</b> and <b>job title</b> (e.g. Owner, CEO).</li>
+            <li><b>Date of birth</b>.</li>
+            <li><b>Home address</b>: your residential address, not a P.O. box.</li>
+            <li><b>Phone number</b>.</li>
+            <li><b>Last 4 digits of your SSN</b>. If Stripe can’t match those, it will ask for the full 9 digits.</li>
+          </ol>
+          <div class="cat" style="margin-bottom:0"><h3>LLCs &amp; corporations: one extra screen</h3><p style="margin:0">Stripe asks you to confirm the <b>owners</b> (anyone with 25% or more) and leaders of the company. Add each person and their details, or confirm that you’re the only one.</p></div>
+        </div>
+        <div>
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><div class="addr">🔒 dashboard.stripe.com/account/onboarding</div></div>
+            <div class="body">
+              <div class="ttl">Verify your personal details</div>
+              <div style="display:flex;gap:6px"><div class="fld" style="flex:1"><label>Legal first name</label><div class="in">Jordan</div></div><div class="fld" style="flex:1"><label>Legal last name</label><div class="in">Smith</div></div></div>
+              <div class="fld"><label>Date of birth</label><div class="in ph">MM / DD / YYYY</div></div>
+              <div class="fld"><label>Home address</label><div class="in ph">Street, City, State, ZIP</div></div>
+              <div class="fld"><label>Phone number</label><div class="in ph">(555) 555-5555</div></div>
+              <div class="fld"><label>Last 4 digits of SSN</label><div class="in ph">••••</div></div>
+              <div class="mbtn">Continue</div>
+            </div>
+          </div>
+          <div class="caption">Illustration.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block" style="margin-bottom:0">
+      <div class="stepbar"><div class="stepnum"><small>STEP</small><span>6</span></div><div><h2>Set What Your Customers See</h2><div class="time">About 3 minutes</div></div></div>
+      <div class="two wide-left">
+        <div>
+          <p>These <b>public details</b> appear on customers’ card statements and Stripe email receipts. Clear details prevent “I don’t recognize this charge” disputes.</p>
+          <ol class="steps">
+            <li><b>Statement descriptor</b>: the name printed on your customer’s bank or card statement. Use the business name customers know you by.</li>
+            <li><b>Shortened descriptor</b> (if asked): a 2–10 character short version of your name.</li>
+            <li><b>Customer support phone</b>, <b>email</b> and <b>address</b>: where customers can reach you about a charge.</li>
+          </ol>
+          <div class="cat" style="margin-bottom:0">
+            <h3>Statement descriptor rules</h3>
+            <ul class="ticks" style="margin:0;font-size:8.2pt">
+              <li>5 to 22 characters, using regular English letters</li>
+              <li>At least one letter (not just numbers)</li>
+              <li>Cannot use these symbols: <b>&lt; &gt; \ ' " *</b></li>
+              <li>Should match your business (“DBA”) name</li>
+            </ul>
+          </div>
+        </div>
+        <div>
+          <div class="stmt">
+            <div class="h">YOUR CUSTOMER’S CARD STATEMENT</div>
+            <div class="r"><span>GROCERY MART #142</span><span>$64.18</span></div>
+            <div class="r me"><span>SMITH BAKERY</span><span>$38.00</span></div>
+            <div class="r"><span>CITY GAS &amp; FUEL</span><span>$41.07</span></div>
+          </div>
+          <div class="caption">The highlighted line is your statement descriptor.</div>
+          <div class="ok" style="margin-top:10px">
+            <h3>Good vs. confusing</h3>
+            <p style="margin:0 0 3px">✓ <b>SMITH BAKERY</b> (customers instantly recognize it)</p>
+            <p style="margin:0">✗ <b>SB LLC 0042</b> (looks unfamiliar and invites disputes)</p>
+          </div>
+          <p style="font-size:8pt;color:var(--light)">You may also see an optional climate-donation offer. It’s fine to skip it.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><div class="brand">BattleLabs.co</div><div class="small">Questions? Call (678) 349-8808</div><div class="pg">5</div></div>
+</section>
+
+<!-- ================= PAGE 6: STEP 7 & 8 ================= -->
+<section class="page">
+  <div class="hdr">
+    <div><div class="brand">BattleLabs.co</div><div class="tag">Web Design · Digital Development · Brand Strategy</div></div>
+    <div class="right">Stripe Setup Guide<b>Steps 7 – 8</b></div>
+  </div>
+  <div class="softrule"></div>
+  <div class="content">
+    <div class="block">
+      <div class="stepbar"><div class="stepnum"><small>STEP</small><span>7</span></div><div><h2>Connect the Bank Account for Your Deposits</h2><div class="time">About 3 minutes</div></div></div>
+      <div class="two wide-left">
+        <div>
+          <p>This is where Stripe sends your money. Stripe calls these deposits <b>payouts</b>. You have two choices:</p>
+          <div class="cat"><h3>Option A: Log in to your bank (fastest)</h3><p style="margin:0">Search for your bank by name, then log in with your normal online-banking username and password through the secure pop-up window. Choose the checking account you want. It’s verified instantly.</p></div>
+          <div class="cat"><h3>Option B: Enter numbers manually</h3><p style="margin:0">Choose the manual-entry option and type your <b>routing number</b> (9 digits) and <b>account number</b>, then type the account number a second time to confirm.</p></div>
+          <div class="warn" style="margin-bottom:0"><h3>Double-check every digit</h3><p style="margin:0">Incorrect bank details are one of the most common reasons payouts are delayed. Use a <b>business checking</b> account in your business’s name when you have one.</p></div>
+        </div>
+        <div>
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><div class="addr">🔒 dashboard.stripe.com/account/onboarding</div></div>
+            <div class="body">
+              <div class="ttl">Select an account for payouts</div>
+              <div class="fld"><div class="in ph">🔍 Search for your bank</div></div>
+              <div style="font-size:6.5pt;color:#555;margin:2px 0 6px">Log in securely to your bank to connect instantly.</div>
+              <div style="text-align:center;font-size:7pt;color:var(--ui-blue);font-weight:600" class="hl">Enter bank details manually instead</div>
+              <div class="fld" style="margin-top:8px"><label>Routing number</label><div class="in ph">9 digits</div></div>
+              <div class="fld"><label>Account number</label><div class="in ph">Account number</div></div>
+              <div class="fld"><label>Confirm account number</label><div class="in ph">Account number</div></div>
+            </div>
+          </div>
+          <div class="caption">Illustration.</div>
+          <div class="stmt" style="margin-top:8px">
+            <div class="h">WHERE TO FIND THE NUMBERS ON A CHECK</div>
+            <div class="r" style="font-family:monospace;font-size:8pt;justify-content:flex-start;gap:14px"><span>⑆<b>123456789</b>⑆</span><span><b>000123456789</b>⑈</span><span>1001</span></div>
+            <div class="r" style="font-size:6.8pt;justify-content:flex-start;gap:28px"><span>↑ Routing</span><span>↑ Account</span><span>↑ Check #</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="block" style="margin-bottom:0">
+      <div class="stepbar"><div class="stepnum"><small>STEP</small><span>8</span></div><div><h2>Turn On Two-Step Login Security</h2><div class="time">About 2 minutes</div></div></div>
+      <div class="two wide-left">
+        <div>
+          <p>Two-step verification means that even if someone steals your password, they can’t get into your account (or your money) without your phone or device. Stripe will ask you to set this up.</p>
+          <table class="t" style="font-size:8pt">
+            <tr><th style="font-size:10pt">Method</th><th style="font-size:10pt">Recommendation</th></tr>
+            <tr><td>Passkey (fingerprint / face on your device)</td><td><b>Best.</b> Stripe recommends passkeys or security keys because they resist phishing.</td></tr>
+            <tr><td>Authenticator app</td><td>Great. Use Google Authenticator, Microsoft Authenticator, etc.</td></tr>
+            <tr><td>Text message (SMS)</td><td>Use only if nothing else works. Stripe calls it a last resort.</td></tr>
+          </table>
+          <p style="margin:0"><b>Save your backup code</b> if Stripe shows you one. Write it on paper and store it somewhere safe. It’s how you get back in if you lose your phone.</p>
+        </div>
+        <div>
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><div class="addr">🔒 dashboard.stripe.com</div></div>
+            <div class="body">
+              <div class="ttl">Secure your account</div>
+              <div class="sub">Add a second step when you sign in.</div>
+              <div class="radio on"><span class="dot"></span><div>Passkey<small>Use your fingerprint, face, or screen lock</small></div></div>
+              <div class="radio"><span class="dot"></span><div>Authenticator app</div></div>
+              <div class="radio"><span class="dot"></span><div>Text message (SMS)</div></div>
+              <div class="mbtn">Continue</div>
+            </div>
+          </div>
+          <div class="caption">Illustration. You can add more methods later in Settings › Personal details.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="ftr"><div class="brand">BattleLabs.co</div><div class="small">Questions? Call (678) 349-8808</div><div class="pg">6</div></div>
+</section>
+
+<!-- ================= PAGE 7: STEP 9 + AFTER ================= -->
+<section class="page">
+  <div class="hdr">
+    <div><div class="brand">BattleLabs.co</div><div class="tag">Web Design · Digital Development · Brand Strategy</div></div>
+    <div class="right">Stripe Setup Guide<b>Step 9 &amp; After</b></div>
+  </div>
+  <div class="softrule"></div>
+  <div class="content">
+    <div class="block">
+      <div class="stepbar"><div class="stepnum"><small>STEP</small><span>9</span></div><div><h2>Review Everything &amp; Submit</h2><div class="time">About 2 minutes</div></div></div>
+      <div class="two wide-left">
+        <div>
+          <ol class="steps">
+            <li>Stripe shows a <b>summary page</b> with everything you entered. Read each section slowly.</li>
+            <li>Spot a mistake? Click <b>Edit</b> next to that section, fix it, and come back.</li>
+            <li>When everything is correct, click <span class="btn">Agree and submit</span>. This also accepts Stripe’s Services Agreement.</li>
+            <li>Your Dashboard switches from test mode to <b>live mode</b>. You’re ready to accept real payments.</li>
+          </ol>
+          <div class="ok" style="margin-bottom:0"><h3>That’s it, you did it!</h3><p style="margin:0">Send us a quick text or call at <b>(678) 349-8808</b> once you’ve submitted, and we’ll take it from there to connect Stripe to your website. <b>Never send us your password.</b> If we need access, Stripe lets you invite us as a team member (see the next page).</p></div>
+        </div>
+        <div>
+          <div class="mock">
+            <div class="chrome"><i></i><i></i><i></i><div class="addr">🔒 dashboard.stripe.com/account/onboarding</div></div>
+            <div class="body">
+              <div class="ttl">Review and submit</div>
+              <div class="r" style="display:flex;justify-content:space-between;font-size:7pt;border-bottom:1px solid #eee;padding:3px 0"><span>Business details</span><span style="color:var(--ui-blue)">Edit</span></div>
+              <div class="r" style="display:flex;justify-content:space-between;font-size:7pt;border-bottom:1px solid #eee;padding:3px 0"><span>Personal details</span><span style="color:var(--ui-blue)">Edit</span></div>
+              <div class="r" style="display:flex;justify-content:space-between;font-size:7pt;border-bottom:1px solid #eee;padding:3px 0"><span>Public details</span><span style="color:var(--ui-blue)">Edit</span></div>
+              <div class="r" style="display:flex;justify-content:space-between;font-size:7pt;border-bottom:1px solid #eee;padding:3px 0"><span>Bank account</span><span style="color:var(--ui-blue)">Edit</span></div>
+              <div class="r" style="display:flex;justify-content:space-between;font-size:7pt;padding:3px 0"><span>Two-step authentication</span><span style="color:var(--green)">✓ On</span></div>
+              <div class="mbtn hl">Agree and submit</div>
+            </div>
+          </div>
+          <div class="caption">Illustration.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="sec">After you submit</div>
+    <h2 style="font-size:19pt">What Happens Next</h2>
+    <table class="t">
+      <tr><th style="width:32%">Question</th><th>Answer</th></tr>
+      <tr><td>Can I accept payments right away?</td><td>Usually yes. Stripe reviews your information in the background and emails you if it needs anything else.</td></tr>
+      <tr><td>When does money reach my bank?</td><td>For US accounts, card payments typically become available in about <b>2 business days</b>, then are paid out to your bank automatically on a daily schedule by default. Some banks take an extra day to show the deposit, and certain business types can see longer timing.</td></tr>
+      <tr><td>What does Stripe cost?</td><td>No setup or monthly fee for standard payments. Stripe takes a small fee from each payment. See current rates at <span class="url">stripe.com/pricing</span>.</td></tr>
+      <tr><td>Stripe emailed asking for more info. Is that bad?</td><td>No, it’s normal. Common requests: a photo of your ID, your full SSN, or an IRS letter confirming your EIN (such as IRS Letter 147C or your SS-4 confirmation letter). Log in at <b>dashboard.stripe.com</b> (don’t click links in unexpected emails) and follow the prompt.</td></tr>
+    </table>
+  </div>
+  <div class="ftr"><div class="brand">BattleLabs.co</div><div class="small">Questions? Call (678) 349-8808</div><div class="pg">7</div></div>
+</section>
+
+<!-- ================= PAGE 8: TROUBLESHOOTING + CHECKLIST ================= -->
+<section class="page">
+  <div class="hdr">
+    <div><div class="brand">BattleLabs.co</div><div class="tag">Web Design · Digital Development · Brand Strategy</div></div>
+    <div class="right">Stripe Setup Guide<b>Help &amp; Checklist</b></div>
+  </div>
+  <div class="softrule"></div>
+  <div class="content">
+    <div class="sec">If something goes wrong</div>
+    <h2 style="font-size:19pt">Quick Fixes for Common Problems</h2>
+    <table class="t">
+      <tr><th style="width:32%">Problem</th><th>What to do</th></tr>
+      <tr><td>No verification email</td><td>Wait 5 minutes, check Spam / Junk / Promotions, and confirm you typed your email correctly. You can request a new one from the Dashboard.</td></tr>
+      <tr><td>“We couldn’t verify your business / tax ID”</td><td>Your legal name or EIN doesn’t match IRS records. Compare against your IRS EIN letter, fix any difference (even “LLC” vs “L.L.C.”), and resubmit.</td></tr>
+      <tr><td>“We couldn’t verify your identity”</td><td>Re-check your legal name, date of birth, home address and SSN. Stripe may ask for your full SSN or a photo of your ID: use good lighting, no glare, all four corners showing.</td></tr>
+      <tr><td>Bank account won’t connect</td><td>Use Option B (enter routing &amp; account numbers manually). Confirm them in your bank app.</td></tr>
+      <tr><td>Locked out / lost phone</td><td>Use your backup code from Step 8, or use “Forgot password” on the Stripe sign-in page.</td></tr>
+      <tr><td>Need to give us access</td><td>In Stripe go to <b>Settings › Team and security › Team</b>, click <b>Add member</b>, enter our email, and choose the role we tell you. Never share your password.</td></tr>
+    </table>
+
+    <div class="sec" style="margin-top:6px">Tick these off as you go</div>
+    <h2 style="font-size:19pt">Your Setup Checklist</h2>
+    <table class="t check">
+      <tr><td><span class="box"></span></td><td style="font-weight:400;width:auto"><b>Gathered</b> everything on Page 2 (EIN or SSN, bank info, ID)</td></tr>
+      <tr><td><span class="box"></span></td><td style="font-weight:400;width:auto"><b>Step 1</b>: Created login at dashboard.stripe.com/register with the correct country</td></tr>
+      <tr><td><span class="box"></span></td><td style="font-weight:400;width:auto"><b>Step 2</b>: Clicked the verification link in my email</td></tr>
+      <tr><td><span class="box"></span></td><td style="font-weight:400;width:auto"><b>Step 3</b>: Clicked Activate / Verify your business on the Dashboard</td></tr>
+      <tr><td><span class="box"></span></td><td style="font-weight:400;width:auto"><b>Step 4</b>: Entered business type, legal name, EIN, address, industry, website</td></tr>
+      <tr><td><span class="box"></span></td><td style="font-weight:400;width:auto"><b>Step 5</b>: Entered my personal details (and owners, if a company)</td></tr>
+      <tr><td><span class="box"></span></td><td style="font-weight:400;width:auto"><b>Step 6</b>: Set a clear statement descriptor and customer support info</td></tr>
+      <tr><td><span class="box"></span></td><td style="font-weight:400;width:auto"><b>Step 7</b>: Connected my business bank account and double-checked the numbers</td></tr>
+      <tr><td><span class="box"></span></td><td style="font-weight:400;width:auto"><b>Step 8</b>: Turned on two-step login and saved my backup code</td></tr>
+      <tr><td><span class="box"></span></td><td style="font-weight:400;width:auto"><b>Step 9</b>: Reviewed everything, clicked Agree and submit, and let Battle Labs know</td></tr>
+    </table>
+
+    <p class="why" style="text-align:center;margin-top:6px">“Stuck on any step? Take a photo or screenshot of your screen (cover any personal numbers) and text it to us. We’ll walk you through it.”</p>
+  </div>
+  <div class="ftr"><div class="brand">BattleLabs.co</div><div class="small">Web Design · Digital Development · Brand Strategy · (678) 349-8808</div><div class="pg">8</div></div>
+</section>
+
+</body>
+</html>
