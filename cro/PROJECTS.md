@@ -5,23 +5,23 @@ session titles, statuses and their latest summaries. Full transcripts of chats
 started from your computer (Remote Control) can only be read from a trusted device,
 so details below come from each chat's latest summary only.
 
-Last synced: 2026-11-06 07:22 ET (morning brief)
+Last synced: 2026-11-07 07:18 ET (morning brief)
 
 ## Waiting on Casey (blocked)
 
 | Project | Chat | Last updated | What it needs from you | Revenue link |
 |---------|------|--------------|------------------------|--------------|
 | BattleLabs Prompts (prompt library site) | BattleLabs Prompts domain launch | 2026-10-11 | Add the 8 env vars in Vercel (Production + Preview) with Stripe test keys and prices, then tell that chat | **Direct**: paid product, Stripe checkout |
-| Bash Kings app game | Bash kings app game | 2026-11-06 | Chat had new activity this morning and is marked ready to review (no summary given). Earlier: forward Google's Japan payments invite when it arrives (deadline Dec 1) | Direct: in-app payments |
+| Bash Kings app game | Bash kings app game | 2026-11-07 | Pick hill fix: 1 (size hills to truck) or 2 (coins and junk on hills). Also forward Google's Japan payments invite when it arrives (deadline Dec 1) | Direct: in-app payments |
 | Custom TV OS | Custom TV OS design | 2026-10-23 | Enable ADB + unknown sources on Fire TV, send its IP | None found |
 | Trading strategy | Cloud chat history access | 2026-10-05 | Market, account size, platform, trading style | Unclear |
 | Vercel account limits | (Gmail alert, not a chat) | 2026-10-31 | Free tier at 100% of 10 GB deployment storage; 2 domains misconfigured on 1 project | Supporting: sites could go down |
-| Agent Indexed listing review | (Gmail, not a chat) | 2026-11-01 | LuckPanda submitted a listing and followed up offering 50% lifetime affiliate if approved (their claim, unverified). Approve or decline in the Agent Indexed review queue | Possible Direct (affiliate) |
-| YouTube channel ideas (Episode 1 in production) | Viral YouTube channel ideas | 2026-11-06 | Marked ready to review this morning (no summary given). Open it to see the latest output | Supporting: content/lead engine |
+| Agent Indexed listings | (Gmail, not a chat) | 2026-11-07 | You replied to LuckPanda on Nov 6 (receipt is not approval); LuckPanda replied with a changed price. AI for Database confirmed its contact address and unchanged details. Next: review and approve/decline both | Possible Direct (affiliate) |
+| YouTube channel ideas (Episode 1 in production) | Viral YouTube channel ideas | 2026-11-07 | Decide: fix the empty phones and near-empty scenes now, or wait for the Runway clips | Supporting: content/lead engine |
 | KDP (new chat, Nov 2) | kdp | 2026-11-04 | **Last turn FAILED** (Nov 4, 8:31am ET) while it was waiting on you about resuming "the full pull". Open the chat and retry | Direct: royalties |
 | KDP word-search pilot | kdp (old chat, now archived) | 2026-11-02 | Spec saved to SPEC-WORDSEARCH.md, no pages built. Pick a new village setting for a 3-case pilot, or keep Hotel Larkspur. Scene book PDF (96 pages) was built earlier | Direct: royalties |
 | Honkle: Bus Jam Word Puzzle (Google Play) | (Gmail: Testers Community) | 2026-11-02 | Closed-testing feedback report + production access answers arrived. Review and apply for production | Direct: app revenue |
-| Ad video skills | Video transcript to AI agent instructions | 2026-11-06 | Pick which app video to run the new video-editing skills on first | Supporting: ads |
+| Word Pop promo video | Video transcript to AI agent instructions | 2026-11-07 | promo/shorts/out/wordpop-cinematic-v2.mp4 rendered (9:16, 15.5s). Approve the v2 look or list changes; 16:9 and variants wait on that | Supporting: Word Pop ads |
 | Reel analysis | Email information | 2026-10-05 | Run the provided prompt in Gemini with the reel, paste result back | Content |
 
 ## In review / waiting on a platform
