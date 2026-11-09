@@ -5,7 +5,7 @@ session titles, statuses and their latest summaries. Full transcripts of chats
 started from your computer (Remote Control) can only be read from a trusted device,
 so details below come from each chat's latest summary only.
 
-Last synced: 2026-11-08 07:18 ET (morning brief)
+Last synced: 2026-11-09 07:24 ET (morning brief)
 
 ## Waiting on Casey (blocked)
 
@@ -17,13 +17,14 @@ Last synced: 2026-11-08 07:18 ET (morning brief)
 | Trading strategy | Cloud chat history access | 2026-10-05 | Market, account size, platform, trading style | Unclear |
 | Vercel account limits | (Gmail alert, not a chat) | 2026-10-31 | Free tier at 100% of 10 GB deployment storage; 2 domains misconfigured on 1 project | Supporting: sites could go down |
 | Agent Indexed listings | (Gmail, not a chat) | 2026-11-08 | LuckPanda: price changed, approve/decline. AI for Database: your Nov 7 email to directory-listings@aifordatabase.com bounced again; reply to listings@inbound.aifordatabase.com instead | Possible Direct (affiliate) |
-| YouTube channel ideas (Episode 1 in production) | Viral YouTube channel ideas | 2026-11-08 | Reply: check the tap/quiz compositions and re-render v8, or leave v8 as is? | Supporting: content/lead engine |
+| YouTube channel ideas (Episode 1 in production) | Viral YouTube channel ideas | 2026-11-09 | Chat paused: "Stopping here until your next message." Send the next instruction | Supporting: content/lead engine |
 | KDP (new chat, Nov 2) | kdp | 2026-11-04 | **Last turn FAILED** (Nov 4, 8:31am ET) while it was waiting on you about resuming "the full pull". Open the chat and retry | Direct: royalties |
 | KDP word-search pilot | kdp (old chat, now archived) | 2026-11-02 | Spec saved to SPEC-WORDSEARCH.md, no pages built. Pick a new village setting for a 3-case pilot, or keep Hotel Larkspur. Scene book PDF (96 pages) was built earlier | Direct: royalties |
 | Honkle: Bus Jam Word Puzzle (Google Play) | (Gmail: Testers Community) | 2026-11-02 | Closed-testing feedback report + production access answers arrived. Review and apply for production | Direct: app revenue |
 | Word Pop promo video | Video transcript to AI agent instructions | 2026-11-08 | wordpop-cinematic-v5.mp4 saved to Drive: Games/Word Pop/08 Ad Videos (Instagram-Facebook). Ready to run once Word Pop is live | Supporting: Word Pop ads |
 | Stripe setup guide | Stripe account setup instructions (new, Nov 7) | 2026-11-07 | Guide PDF ready; source is draft PR #4 in caseybattle/CLX-. Review/merge PR #4 | Supporting: payments |
-| Overseer automation | Super agent monitoring setup (new, Nov 8) | 2026-11-08 | "overseer-daily" created, runs daily ~11:47 AM in Auto mode; first run untested. Runs on your computer, so the cloud brief can't see its results. Tell me what it reports | Supporting |
+| Overseer automation | Super agent monitoring setup | 2026-11-08 | overseer-daily enabled (~11:47 AM daily). First run succeeded: all 7 tasks clear, no push sent | Supporting |
+| AI micro drama series (new, Nov 9) | I want to make a vertical AI micro drama series | 2026-11-09 | Say go to write showbrief.md and tester-script.md into Antigravity Skills | Unclear |
 | Reel analysis | Email information | 2026-10-05 | Run the provided prompt in Gemini with the reel, paste result back | Content |
 
 ## In review / waiting on a platform
@@ -39,6 +40,9 @@ Last synced: 2026-11-08 07:18 ET (morning brief)
 
 | Project | Chat | Result |
 |---------|------|--------|
+| Cinematic promo videos, 3 games (new, Nov 9) | Cinematic promo videos, 3 games | Pushed ec1c257 to main; a compose.mjs BRAND change is left uncommitted |
+| Live activity dashboard (new, Nov 9) | Live activity dashboard | Artifact v5 published; Games panel marks handles confirmed from Blotato |
+| Blip sample video | Video transcript to AI agent instructions | blip-sample-v4.mp4 (15.8s) sent; beat 4 and ending unchecked |
 | Roofer plan / Claude mods | Claude Mods guide | Roofer-plan question no longer pending; latest turn explained the 7 installed mods. Roofer plan status unclear — confirm whether CRO should prioritize it |
 | Fire TV launcher | FireTV Launcher Package | Installed; 27 ad/tracking packages disabled. To do: back up the signing key, turn off ADB debugging |
 | Prompt library push | BattleLabs Prompts GitHub push | Pushed to caseybattle/promptlibrary main |
