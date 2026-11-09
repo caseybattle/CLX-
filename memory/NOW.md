@@ -4,7 +4,7 @@
 > It is automatically re-injected after every compact / clear / resume.
 
 ## Current task
-Fix context loss: agents forget Casey's messages and in-progress work after compaction / /clear.
+Add a Stop hook that auto-commits + pushes memory/ every turn (so Casey's messages reach GitHub immediately and the 'uncommitted changes' nag stops).
 
 ## What Casey asked for (key facts, numbers, names, links — verbatim where it matters)
 - Messages get compacted right after Enter, so the agent asks questions Casey already answered.
@@ -14,10 +14,13 @@ Fix context loss: agents forget Casey's messages and in-progress work after comp
 -
 
 ## Done so far
-- Built memory system: memory/INBOX.md (auto-capture hook), memory/NOW.md (re-injected on startup/resume/clear/compact), protocol in CLAUDE.md.
+- Built memory system: INBOX.md auto-capture hook + NOW.md restore hook + CLAUDE.md protocol. Both hooks verified live (capture on 19:22 msg, restore on 20:13 resume).
+- Fixed capture hook logging system notifications as Casey's messages.
+- PR #3: GitGuardian green, no reviews, mergeable.
 
 ## Next step
-- Casey: open `/hooks` once or start a new session so the hooks load, then re-send the task from the other chat.
+- Write .claude/hooks/autosave-memory.sh, wire as Stop hook, test, push.
+- Then: Casey merges PR #3; optionally trim unused connectors to reduce compaction.
 
 ## Open questions for Casey (only things NOT answered above or in INBOX.md)
 -
