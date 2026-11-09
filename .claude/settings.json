@@ -3,7 +3,11 @@
     "UserPromptSubmit": [
       {
         "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/capture-prompt.sh\"", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/capture-prompt.sh\"",
+            "timeout": 10
+          }
         ]
       }
     ],
@@ -11,7 +15,22 @@
       {
         "matcher": "startup|resume|clear|compact",
         "hooks": [
-          { "type": "command", "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/restore-context.sh\"", "timeout": 10 }
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/restore-context.sh\"",
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/autosave-memory.sh\"",
+            "timeout": 60
+          }
         ]
       }
     ]

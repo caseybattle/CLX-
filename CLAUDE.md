@@ -34,7 +34,8 @@ Rules:
    things that truly aren't written down.
 4. **Put big outputs in files, not chat.** Drafts, research and plans go in a file
    and get linked from NOW.md, so a compaction can't erase them.
-5. **Persist across sessions.** Cloud containers are temporary. At the end of a work
-   block, commit and push `memory/` (and any work files) so the next session has them.
+5. **Persist across sessions.** Cloud containers are temporary. A `Stop` hook
+   (`.claude/hooks/autosave-memory.sh`) auto-commits and pushes `memory/` after every turn.
+   You still commit and push other work files yourself at the end of a work block.
 6. When a task finishes, move its summary to the relevant `cro/` file or `cro/DECISIONS.md`
    and reset NOW.md's "Current task".
