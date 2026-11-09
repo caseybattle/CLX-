@@ -12,6 +12,11 @@ sid="$(printf '%s' "$payload" | jq -r '.session_id // "?"' 2>/dev/null)"
 # Skip empty prompts and bare slash commands like /clear
 trimmed="$(printf '%s' "$prompt" | tr -d '[:space:]')"
 if [ -z "$trimmed" ] || printf '%s' "$prompt" | grep -Eq '^/[A-Za-z:_-]+[[:space:]]*$'; then exit 0; fi
+# Skip automated, non-Casey turns: system/task notifications, PR wake events, hook feedback
+first="$(printf '%s' "$prompt" | sed -n '/[^[:space:]]/{p;q;}' | sed 's/^[[:space:]]*//')"
+case "$first" in
+  "<"*|"Stop hook feedback"*|"[SYSTEM NOTIFICATION"*) exit 0 ;;
+esac
 {
   printf '\n---\n### %s · session %s\n\n' "$(date -u '+%Y-%m-%d %H:%M UTC')" "${sid:0:8}"
   printf '%s\n' "$prompt"
