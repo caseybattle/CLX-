@@ -4,28 +4,28 @@
 > It is automatically re-injected after every compact / clear / resume.
 
 ## Current task
-_none active_ — memory system complete.
+Act on Casey's answers (2026-11-10 ~22:45 UTC) to the morning-brief "waiting on you" list.
 
-## What Casey asked for (key facts, numbers, names, links — verbatim where it matters)
-- Messages get compacted right after Enter, so the agent asks questions Casey already answered.
-- Mid-task compaction makes the agent forget what it was doing.
+## What Casey said (verbatim-ish)
+- Honkle (Google Play): ALREADY submitted for production and access granted. -> mark done in PROJECTS.md.
+- Agent Indexed / LuckPanda price change: Casey doesn't know what it is. "It's a payment... figure out what's going on." -> investigate Gmail, explain, DRAFT any reply/acceptance; don't accept/pay without Casey's OK.
+- BattleLabs Prompts: Casey doesn't remember it ("something old, don't know where it came from"). -> explain what it is from the chat/session.
+- PR #4 (Stripe setup guide): "if you want it, I guess you can" merge it. -> check it's safe/mergeable, then merge.
+- Bash Kings: YES, push the small-ramps branch to main. -> relay to the Bash Kings chat (or do it).
+- KDP pilot / KDP research: Casey doesn't know what's going on. -> summarize KDP status plainly.
 
 ## Decisions made (don't re-ask)
--
+- Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
+- PR #4: OK to merge.
+- Memory system done; PR #3 waiting on Casey to merge.
 
 ## Done so far
-- Built memory system: INBOX.md auto-capture hook + NOW.md restore hook + CLAUDE.md protocol. Both hooks verified live (capture on 19:22 msg, restore on 20:13 resume).
-- Fixed capture hook logging system notifications as Casey's messages.
-- PR #3: GitGuardian green, no reviews, mergeable.
-- Added Stop hook autosave-memory.sh: commits+pushes memory/ every turn (skips main/master). Verified live.
-- Capture hook now commits each message instantly + pushes in background (fixed end-of-turn race). Verified live 2026-11-10 22:43 UTC.
-- 2026-11-10 morning brief done; PROJECTS.md updated. Items waiting on Casey are REPORT-ONLY — nothing was changed or confirmed on them.
+- (starting)
 
 ## Next step
-- Casey: merge PR #3.
-- Casey picks which waiting item to tackle; agent can draft/prep but Casey must do account actions (Vercel env vars, Play Console, approvals).
+- Investigate LuckPanda (Gmail), BattleLabs + KDP + Bash Kings sessions; check/merge PR #4; update PROJECTS.md (Honkle done).
 
-## Open questions for Casey (only things NOT answered above or in INBOX.md)
+## Open questions for Casey
 -
 
 _Last updated: 2026-11-10_
