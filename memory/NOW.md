@@ -22,7 +22,7 @@ Verify AgentIndexed (agentindexed.com) Stripe checkout + webhook is wired end-to
 
 ## Findings
 - Live site = static, Stripe Payment Links; webhook URL agentindexed.com/api/stripe-webhook = 404 (no API code). Payments still work without it. See cro/research/2026-11-10-agentindexed-payments-check.md.
-- Stripe read-only agent running: Nov 7 checkouts, webhook list, payment link/price config, account payouts.
+- Stripe check DONE: BANK ACCOUNT DEACTIVATED (Chase ••6198) → payouts will fail; Casey must re-link in Stripe Settings → Payouts. Links active+correct. Nov 7 = China visitor/bot, $99 sponsor, abandoned. 0 sales ever (11 opens). Webhook is leftover from ChatGPT 'replacement' site → disable. Backlink wording mismatch site vs Stripe.
 
 ## Decisions made (don't re-ask)
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
