@@ -20,6 +20,10 @@ Verify AgentIndexed (agentindexed.com) Stripe checkout + webhook is wired end-to
 - Live site checkout link opened a real payment page on his phone; he stopped before paying (doesn't want to be charged).
 - Wants it confirmed connected correctly so the site can make money. Frustrated: saw Alex Finn's site already at $1,100.
 
+## Findings
+- Live site = static, Stripe Payment Links; webhook URL agentindexed.com/api/stripe-webhook = 404 (no API code). Payments still work without it. See cro/research/2026-11-10-agentindexed-payments-check.md.
+- Stripe read-only agent running: Nov 7 checkouts, webhook list, payment link/price config, account payouts.
+
 ## Decisions made (don't re-ask)
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
 - PR #4: OK to merge.
