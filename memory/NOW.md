@@ -17,14 +17,15 @@ _none active_ — memory system complete.
 - Built memory system: INBOX.md auto-capture hook + NOW.md restore hook + CLAUDE.md protocol. Both hooks verified live (capture on 19:22 msg, restore on 20:13 resume).
 - Fixed capture hook logging system notifications as Casey's messages.
 - PR #3: GitGuardian green, no reviews, mergeable.
-- Added Stop hook autosave-memory.sh: commits+pushes memory/ every turn (skips main/master). Tested: commits, pushes, no-op when clean.
+- Added Stop hook autosave-memory.sh: commits+pushes memory/ every turn (skips main/master). Verified live.
+- Capture hook now commits each message instantly + pushes in background (fixed end-of-turn race). Verified live 2026-11-10 22:43 UTC.
+- 2026-11-10 morning brief done; PROJECTS.md updated. Items waiting on Casey are REPORT-ONLY — nothing was changed or confirmed on them.
 
 ## Next step
-- Casey: merge PR #3 so every new session gets the hooks.
-- Optional: trim unused connectors to make compaction rarer (offered, not yet answered).
-- Casey re-sends the task from the other chat.
+- Casey: merge PR #3.
+- Casey picks which waiting item to tackle; agent can draft/prep but Casey must do account actions (Vercel env vars, Play Console, approvals).
 
 ## Open questions for Casey (only things NOT answered above or in INBOX.md)
 -
 
-_Last updated: 2026-11-09_
+_Last updated: 2026-11-10_
