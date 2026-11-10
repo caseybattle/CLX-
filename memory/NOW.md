@@ -23,10 +23,12 @@ Act on Casey's answers (2026-11-10 ~22:45 UTC) to the morning-brief "waiting on 
 - PR #4 (Stripe guide) marked ready + squash-merged (485a72d). Repo default branch = claude/find-remote-jobs-egrQO.
 - PROJECTS.md: Honkle moved to done; PR #4 merged; Bash Kings decision recorded.
 - LuckPanda researched → cro/research/2026-11-10-agentindexed-luckpanda.md: NO payment owed; AgentIndexed is Casey's own directory. Flag: Stripe 'update bank account' email 30 Oct.
-- Background agents launched: (1) LuckPanda/Agent Indexed Gmail read-only; (2) BattleLabs/KDP/Bash Kings session summaries + Bash Kings session id.
+- BattleLabs/KDP/Bash Kings researched → cro/research/2026-11-10-battlelabs-kdp-bashkings.md.
+- Relay to Bash Kings chat FAILED: desktop session, cloud can't message it without Casey's trusted-device approval. Casey to type answer there himself.
+- Background agents (done): (1) LuckPanda/Agent Indexed Gmail read-only; (2) BattleLabs/KDP/Bash Kings session summaries + Bash Kings session id.
 
 ## Next step
-- When agents report: explain LuckPanda (draft reply only), BattleLabs, KDP to Casey; relay 'push small-ramps to main' to Bash Kings chat.
+- Casey: type 'push small-ramps to main' in the Bash Kings chat; re-login Claude Code on the KDP computer + retry; decide on BattleLabs (finish = ~1h: 8 Vercel env vars + merge PR #2 in promptlibrary); check Stripe 'update bank account' email in dashboard; merge PR #3.
 
 ## Open questions for Casey
 -
