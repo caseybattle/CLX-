@@ -22,6 +22,7 @@ Act on Casey's answers (2026-11-10 ~22:45 UTC) to the morning-brief "waiting on 
 ## Done so far
 - PR #4 (Stripe guide) marked ready + squash-merged (485a72d). Repo default branch = claude/find-remote-jobs-egrQO.
 - PROJECTS.md: Honkle moved to done; PR #4 merged; Bash Kings decision recorded.
+- LuckPanda researched → cro/research/2026-11-10-agentindexed-luckpanda.md: NO payment owed; AgentIndexed is Casey's own directory. Flag: Stripe 'update bank account' email 30 Oct.
 - Background agents launched: (1) LuckPanda/Agent Indexed Gmail read-only; (2) BattleLabs/KDP/Bash Kings session summaries + Bash Kings session id.
 
 ## Next step
