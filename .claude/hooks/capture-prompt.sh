@@ -21,4 +21,14 @@ esac
   printf '\n---\n### %s · session %s\n\n' "$(date -u '+%Y-%m-%d %H:%M UTC')" "${sid:0:8}"
   printf '%s\n' "$prompt"
 } >> "$INBOX"
+# Commit right away (so nothing is left uncommitted at turn end) and push in the
+# background. Never pushes main/master. Failures are harmless: the Stop hook retries.
+(
+  cd "$ROOT" || exit 0
+  git rev-parse --is-inside-work-tree >/dev/null 2>&1 || exit 0
+  git add -- memory/INBOX.md && git commit -q -m "memory: capture message $(date -u '+%Y-%m-%d %H:%M UTC')" -- memory/INBOX.md || exit 0
+  b="$(git rev-parse --abbrev-ref HEAD)"
+  case "$b" in main|master|HEAD|"") exit 0 ;; esac
+  git push -q -u origin "$b"
+) >/dev/null 2>&1 &
 exit 0
