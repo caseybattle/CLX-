@@ -4,7 +4,7 @@
 > It is automatically re-injected after every compact / clear / resume.
 
 ## Current task
-Act on Casey's answers (2026-11-10 ~22:45 UTC) to the morning-brief "waiting on you" list.
+Verify AgentIndexed (agentindexed.com) Stripe checkout + webhook is wired end-to-end WITHOUT Casey paying, and find out what the 2 checkouts on Nov 7 were.
 
 ## What Casey said (verbatim-ish)
 - Honkle (Google Play): ALREADY submitted for production and access granted. -> mark done in PROJECTS.md.
@@ -13,6 +13,12 @@ Act on Casey's answers (2026-11-10 ~22:45 UTC) to the morning-brief "waiting on 
 - PR #4 (Stripe setup guide): "if you want it, I guess you can" merge it. -> check it's safe/mergeable, then merge.
 - Bash Kings: YES, push the small-ramps branch to main. -> relay to the Bash Kings chat (or do it).
 - KDP pilot / KDP research: Casey doesn't know what's going on. -> summarize KDP status plainly.
+
+## Casey said 2026-11-10 ~23:00 UTC
+- Stripe email was about the WEBHOOK; Casey re-pointed it to agentindexed.com/api/stripe-webhook; appears to work.
+- No purchases yet. Stripe shows 2 checkout attempts on Nov 7 — unknown if test/Codex/real buyers.
+- Live site checkout link opened a real payment page on his phone; he stopped before paying (doesn't want to be charged).
+- Wants it confirmed connected correctly so the site can make money. Frustrated: saw Alex Finn's site already at $1,100.
 
 ## Decisions made (don't re-ask)
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
