@@ -20,10 +20,12 @@ Act on Casey's answers (2026-11-10 ~22:45 UTC) to the morning-brief "waiting on 
 - Memory system done; PR #3 waiting on Casey to merge.
 
 ## Done so far
-- (starting)
+- PR #4 (Stripe guide) marked ready + squash-merged (485a72d). Repo default branch = claude/find-remote-jobs-egrQO.
+- PROJECTS.md: Honkle moved to done; PR #4 merged; Bash Kings decision recorded.
+- Background agents launched: (1) LuckPanda/Agent Indexed Gmail read-only; (2) BattleLabs/KDP/Bash Kings session summaries + Bash Kings session id.
 
 ## Next step
-- Investigate LuckPanda (Gmail), BattleLabs + KDP + Bash Kings sessions; check/merge PR #4; update PROJECTS.md (Honkle done).
+- When agents report: explain LuckPanda (draft reply only), BattleLabs, KDP to Casey; relay 'push small-ramps to main' to Bash Kings chat.
 
 ## Open questions for Casey
 -

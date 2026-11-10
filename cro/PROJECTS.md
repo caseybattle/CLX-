@@ -12,7 +12,7 @@ Last synced: 2026-11-10 07:22 ET (morning brief)
 | Project | Chat | Last updated | What it needs from you | Revenue link |
 |---------|------|--------------|------------------------|--------------|
 | BattleLabs Prompts (prompt library site) | BattleLabs Prompts domain launch | 2026-10-11 | Add the 8 env vars in Vercel (Production + Preview) with Stripe test keys and prices, then tell that chat | **Direct**: paid product, Stripe checkout |
-| Bash Kings app game | Bash kings app game | 2026-11-09 | **New:** say whether to push the small-ramps branch and merge into main, or open a PR. Still: forward Google's Japan payments invite when it arrives (deadline Dec 1) | Direct: in-app payments |
+| Bash Kings app game | Bash kings app game | 2026-11-09 | Casey answered 2026-11-10: **push small-ramps to main** (relay to chat). Still: forward Google's Japan payments invite when it arrives (deadline Dec 1) | Direct: in-app payments |
 | Custom TV OS | Custom TV OS design | 2026-10-23 | Enable ADB + unknown sources on Fire TV, send its IP | None found |
 | Trading strategy | Cloud chat history access | 2026-10-05 | Market, account size, platform, trading style | Unclear |
 | Vercel account limits | (Gmail alert, not a chat) | 2026-10-31 | Free tier at 100% of 10 GB deployment storage; 2 domains misconfigured on 1 project | Supporting: sites could go down |
@@ -20,15 +20,16 @@ Last synced: 2026-11-10 07:22 ET (morning brief)
 | YouTube channel ideas (Episode 1 in production) | Viral YouTube channel ideas (archived Nov 10) | 2026-11-09 | Chat was archived while paused on "Stopping here until your next message." Unarchive and send the next instruction, or drop it | Supporting: content/lead engine |
 | KDP (new chat, Nov 2) | kdp | 2026-11-04 | **Last turn FAILED** (Nov 4, 8:31am ET) while it was waiting on you about resuming "the full pull". Open the chat and retry | Direct: royalties |
 | KDP word-search pilot | kdp (old chat, now archived) | 2026-11-02 | Spec saved to SPEC-WORDSEARCH.md, no pages built. Pick a new village setting for a 3-case pilot, or keep Hotel Larkspur. Scene book PDF (96 pages) was built earlier | Direct: royalties |
-| Honkle: Bus Jam Word Puzzle (Google Play) | (Gmail: Testers Community) | 2026-11-02 | Closed-testing feedback report + production access answers arrived. Review and apply for production | Direct: app revenue |
 | Word Pop promo video | Video transcript to AI agent instructions | 2026-11-09 | Latest: "v5 sent with all five reference beats (38 MB desktop file, 10 MB phone copy); music and channel badge still missing." Review v5 and decide on music + badge. (Earlier: wordpop-cinematic-v5.mp4 in Drive: Games/Word Pop/08 Ad Videos) | Supporting: Word Pop ads |
 | CLX memory system | Chief revenue officer setup | 2026-11-09 | Hooks that save every message to memory/INBOX.md, restore memory/NOW.md after compaction, autosave memory/ to GitHub each turn. Draft PR #3 caseybattle/CLX- (GitGuardian green, mergeable: clean). Mark ready + merge PR #3 | Supporting: CRO infra |
-| Stripe setup guide | Stripe account setup instructions | 2026-11-07 | Guide PDF ready; source is draft PR #4 in caseybattle/CLX- (still draft, mergeable: clean). Review/merge PR #4 | Supporting: payments |
 | Overseer automation | Super agent monitoring setup (archived Nov 10) | 2026-11-08 | overseer-daily is **not** in the cloud scheduled-task list (likely a Cowork desktop task, not visible from here). Confirm it is still running | Supporting |
 | AI micro drama series | I want to make a vertical AI micro drama series | 2026-11-10 | Chat moved again (Nov 10 07:04 ET, now "ready for review"); no summary, details only on trusted device. Earlier ask: say go to write showbrief.md and tester-script.md into Antigravity Skills. Open and review | Unclear |
 | Reel analysis | Email information | 2026-10-05 | Run the provided prompt in Gemini with the reel, paste result back | Content |
 
 ## In review / waiting on a platform
+
+- **Honkle: Bus Jam Word Puzzle (Google Play)**: Casey submitted for production and access was granted (confirmed by Casey 2026-11-10).
+- **Stripe setup guide**: PR #4 merged 2026-11-10 (stripe-setup-guide/ in CLX-).
 
 | Project | Chat | Status (from summary) | Revenue link |
 |---------|------|-----------------------|--------------|
