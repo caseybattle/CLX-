@@ -37,3 +37,7 @@
   codes on the link + create a 100%-off code — Stripe writes, need Casey's OK).
 - Inconsistency: Nov 8 API edit changed Featured/Pro product descriptions to "Paid placement; links do not pass
   search-ranking credit", but the live pricing page still says "Every listing includes a dofollow backlink".
+
+## Update 2026-11-11: bank fixed
+Casey added Chase ••5628 manually (routing 061092387). Verified via API: default for USD, status 'new' (normal
+for a manually entered account; it becomes validated once a payout succeeds). Old tokenized ••6198 is gone.
