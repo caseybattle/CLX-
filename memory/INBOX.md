@@ -45,3 +45,8 @@ Oh, I'm just reading some information back. It says that both of the 99 sponsore
 ### 2026-11-11 01:20 UTC · session 5013f540
 
 Okay, so which account needs to be relinked to Chase? Is it the Google, Gmail, or is it the Yahoo account? That's what I need to know, because I think they were okay.
+
+---
+### 2026-11-11 01:34 UTC · session 5013f540
+
+Okay, so I looked on both accounts, and I'm actually in the account right now. I'm looking, and it looks like my bank information and everything is fine. I don't see where it's not connected. It is still connected, so I'm not sure what you're Hey, talking about. Your chicken tastes better than my chicken. Shit.
