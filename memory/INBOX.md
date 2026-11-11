@@ -50,3 +50,8 @@ Okay, so which account needs to be relinked to Chase? Is it the Google, Gmail, o
 ### 2026-11-11 01:34 UTC · session 5013f540
 
 Okay, so I looked on both accounts, and I'm actually in the account right now. I'm looking, and it looks like my bank information and everything is fine. I don't see where it's not connected. It is still connected, so I'm not sure what you're Hey, talking about. Your chicken tastes better than my chicken. Shit.
+
+---
+### 2026-11-11 01:40 UTC · session 5013f540
+
+I went in and added my self my routing number and account number so we should be good
