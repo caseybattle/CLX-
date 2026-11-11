@@ -4,7 +4,7 @@
 > It is automatically re-injected after every compact / clear / resume.
 
 ## Current task
-(1) Disable dead Stripe webhook we_1UVC2gGwPKZP11VP52W3OZf7 (agentindexed.com/api/stripe-webhook) — Casey approved 2026-11-11 'let's fix that first'. (2) Then email capture for agentindexed.com — Casey unsure: Google Sheet form vs collect email when they land.
+(1) DONE 02:05 UTC: webhook we_1UVC2g… disabled via API (status=disabled). (2) Then email capture for agentindexed.com — Casey unsure: Google Sheet form vs collect email when they land.
 
 ## What Casey said (verbatim-ish)
 - Honkle (Google Play): ALREADY submitted for production and access granted. -> mark done in PROJECTS.md.
