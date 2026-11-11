@@ -27,6 +27,9 @@ Verify AgentIndexed (agentindexed.com) Stripe checkout + webhook is wired end-to
 ## Casey 2026-11-10 ~23:20 UTC
 - Upset: visitors reach checkout and leave without email -> nobody to follow up. Wants the '2 cheap fixes' (capture email before checkout + abandoned-checkout recovery). 'We gotta fix that.'
 
+## Casey 2026-11-11 ~01:30 UTC
+- Says Stripe dashboard shows bank connected & fine. I re-verified via Stripe API myself: Chase ••6198 (routing 028000121) default USD, status=tokenized_account_number_deactivated; payouts_enabled=true; no requirements due; 0 payouts ever. Stripe docs: tokenized numbers can be deactivated/revoked and then can't be used for transfers. Advice: replace by MANUAL entry of real account+routing number (not Chase login/instant verify).
+
 ## Decisions made (don't re-ask)
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
 - PR #4: OK to merge.
