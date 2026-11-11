@@ -4,7 +4,7 @@
 > It is automatically re-injected after every compact / clear / resume.
 
 ## Current task
-_none active_ — AgentIndexed email capture LIVE 2026-11-11 02:54 UTC (PR #2 merged 2fa3300, prod dpl_351TruLdS5ZwQEKqePgYsq44itJK, storage:true). Casey's test lead (featured, casbattle19@gmail.com) verified saved.
+DECISION NEEDED: agentindexed.com DNS points to the ChatGPT 'replacement' site (Cloudflare), NOT Vercel. Email capture (PR #2) is only on Vercel. Webhook re-enabled 03:13 UTC (I'd wrongly disabled it 02:05). Ask Casey: keep ChatGPT site or point domain to Vercel site. See cro/research/2026-11-10-agentindexed-payments-check.md CORRECTION.
 
 ## What Casey said (verbatim-ish)
 - Honkle (Google Play): ALREADY submitted for production and access granted. -> mark done in PROJECTS.md.

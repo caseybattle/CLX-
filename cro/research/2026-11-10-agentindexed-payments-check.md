@@ -49,3 +49,15 @@ for a manually entered account; it becomes validated once a payout succeeds). Ol
 - Owner leads page: /api/leads?key=<LEADS_ADMIN_KEY in Vercel env> (&format=csv). Health: /api/lead?check=1.
 - Verified end-to-end with Casey's real test (featured, saved 02:52:42 UTC, landed on Stripe $49 page).
 - Webhook we_1UVC2g… disabled. Vercel API token saved on cloud env "CB" (proxy-injected for api.vercel.com).
+
+## CORRECTION 2026-11-11 03:15 UTC — agentindexed.com is NOT the Vercel site
+- DNS (Namecheap) A records 172.66.3.26 / 162.159.143.30 = Cloudflare → ChatGPT-built "AgentIndexed replacement"
+  site (headers: server cloudflare, frame-ancestors chatgpt.site, OAI-Sites-Authorization). Vercel reports the
+  domain `misconfigured: true`. Earlier checks hit Vercel deployment URLs, not the real domain.
+- Live site flow: sign in with a "Sites account" → listing dashboard → review → buy placement from dashboard;
+  Sponsor = mailto. It HAS /api/stripe-webhook (405 on GET) and says placement applied after Stripe verification.
+- So the webhook we_1UVC2g… IS used by the live site. I disabled it 02:05 UTC by mistake; RE-ENABLED 03:13 UTC.
+  Could not list Stripe events for that window (permission check blocked it); no AgentIndexed sale has ever
+  completed and the only checkout in the window was Casey's unpaid test.
+- The email-capture work (PR #2) is live only on the Vercel deployment (agentindexed*.vercel.app), not the domain.
+  Decision needed from Casey: which site should agentindexed.com serve?
