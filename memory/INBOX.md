@@ -60,3 +60,8 @@ I went in and added my self my routing number and account number so we should be
 ### 2026-11-11 02:06 UTC · session 5013f540
 
 Hey, two things left. Yeah, let's fix that. And then let's fix that first. And I'm not sure if we should do the Google Sheet form or collect the email when they land on the website.
+
+---
+### 2026-11-11 02:09 UTC · session 5013f540
+
+Okay, let me ask you, when somebody's submitting their stuff, are they including their emails? Because I believe we're capturing them that way, but I guess they're not being saved. Is that correct?
