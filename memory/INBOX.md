@@ -55,3 +55,8 @@ Okay, so I looked on both accounts, and I'm actually in the account right now. I
 ### 2026-11-11 01:40 UTC · session 5013f540
 
 I went in and added my self my routing number and account number so we should be good
+
+---
+### 2026-11-11 02:06 UTC · session 5013f540
+
+Hey, two things left. Yeah, let's fix that. And then let's fix that first. And I'm not sure if we should do the Google Sheet form or collect the email when they land on the website.
