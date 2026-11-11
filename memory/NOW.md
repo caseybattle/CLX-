@@ -35,6 +35,10 @@ Plan: Google Apps Script web app -> Google Sheet + email alert to Casey; edit ge
 - New default USD bank: Chase ••5628, routing 061092387, holder CASEY L BATTLE, status=new (normal for manual add). Old tokenized ••6198 removed. payouts_enabled=true, nothing due.
 - Still open: disable dead webhook (agentindexed.com/api/stripe-webhook); Casey to pick email-capture storage (recommended Google Sheet); outreach to ~200 submitters.
 
+## Email capture BUILT (2026-11-11 ~02:30 UTC)
+- caseybattle/agentindexed draft PR #2 (branch capture-emails-before-checkout, 79ca3c4). Pricing buttons -> /submit/?plan=; form POSTs to LEADS_URL then Stripe same-tab w/ prefilled_email. Playwright 6/6 pass. Safe to merge before setup (mailto fallback).
+- Casey must: create Google Sheet + paste ops/leads-apps-script.gs into Extensions→Apps Script → Deploy web app (Me / Anyone) → send URL. Then I set LEADS_URL in Vercel (project prj_glhh8XXdae9q6C4TnOaUgdtwTOkx, team team_TAkgSX0aGkwjFWeBLtAvo2e7) + merge PR #2 + verify live.
+
 ## Decisions made (don't re-ask)
 - 2026-11-11: HOLD the $49 upgrade outreach to ~200 submitters until email capture is in place.
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
