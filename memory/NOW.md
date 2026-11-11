@@ -4,7 +4,7 @@
 > It is automatically re-injected after every compact / clear / resume.
 
 ## Current task
-Casey DECIDED 2026-11-11 ~03:20 UTC: point agentindexed.com to Site B (Vercel). Casey edits Namecheap Advanced DNS: delete A @ 172.66.3.26 + 162.159.143.30 and CNAME www→custom-domains.chatgpt.site; add A @ 216.198.79.1 and CNAME www → 2bf8cb0d4f2bfb23.vercel-dns-017.com. Both domains already verified in Vercel project (www redirects to apex). After switch: verify via Vercel /v6/domains/*/config misconfigured=false + fetch /api/lead?check=1 on domain; then disable Stripe webhook we_1UVC2g… again (Site A only) — tell Casey.
+REVERSED 2026-11-11 ~03:25 UTC: Casey KEEPS Site A (ChatGPT Sites) on agentindexed.com — chose it to avoid paying Vercel; already pays ChatGPT $20/mo. Told Casey NOT to change Namecheap DNS (or restore A @ 172.66.3.26 + 162.159.143.30, CNAME www custom-domains.chatgpt.site). Webhook stays ENABLED (Site A uses it). Email capture for Site A must be built in ChatGPT: prompt at cro/prompts/agentindexed-chatgpt-email-capture.md. Site B (Vercel) left parked; offer to remove blob store/leads page if unwanted.
 
 ## What Casey said (verbatim-ish)
 - Honkle (Google Play): ALREADY submitted for production and access granted. -> mark done in PROJECTS.md.
