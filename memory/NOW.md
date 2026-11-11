@@ -4,7 +4,8 @@
 > It is automatically re-injected after every compact / clear / resume.
 
 ## Current task
-(1) DONE 02:05 UTC: webhook we_1UVC2g… disabled via API (status=disabled). (2) Then email capture for agentindexed.com — Casey unsure: Google Sheet form vs collect email when they land.
+Build AgentIndexed email capture so EVERY submit + buy click saves email (Casey 2026-11-11 02:1x: 'hold off on the email upgrade… make sure we are definitely capturing emails'). Webhook already disabled.
+Plan: Google Apps Script web app -> Google Sheet + email alert to Casey; edit gen.py (Vercel builds from it): submit form POSTs to script URL (fallback mailto if URL unset); pricing buy buttons -> /submit/?plan=featured|pro|sponsor so email is asked first, then Stripe with prefilled_email. Ship via PR on caseybattle/agentindexed.
 
 ## What Casey said (verbatim-ish)
 - Honkle (Google Play): ALREADY submitted for production and access granted. -> mark done in PROJECTS.md.
@@ -35,6 +36,7 @@
 - Still open: disable dead webhook (agentindexed.com/api/stripe-webhook); Casey to pick email-capture storage (recommended Google Sheet); outreach to ~200 submitters.
 
 ## Decisions made (don't re-ask)
+- 2026-11-11: HOLD the $49 upgrade outreach to ~200 submitters until email capture is in place.
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
 - PR #4: OK to merge.
 - Memory system done; PR #3 waiting on Casey to merge.
