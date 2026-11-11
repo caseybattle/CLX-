@@ -39,6 +39,11 @@ Plan: Google Apps Script web app -> Google Sheet + email alert to Casey; edit ge
 - caseybattle/agentindexed draft PR #2 (branch capture-emails-before-checkout, 79ca3c4). Pricing buttons -> /submit/?plan=; form POSTs to LEADS_URL then Stripe same-tab w/ prefilled_email. Playwright 6/6 pass. Safe to merge before setup (mailto fallback).
 - Casey must: create Google Sheet + paste ops/leads-apps-script.gs into Extensions→Apps Script → Deploy web app (Me / Anyone) → send URL. Then I set LEADS_URL in Vercel (project prj_glhh8XXdae9q6C4TnOaUgdtwTOkx, team team_TAkgSX0aGkwjFWeBLtAvo2e7) + merge PR #2 + verify live.
 
+## 2026-11-11 ~02:45 UTC — switched to Vercel Blob (Casey: no Google Sheets, 'go ahead')
+- Vercel MCP is READ-ONLY (403 on create blob store + create env). Code pushed to agentindexed PR #2 (api/lead.js, api/leads.js, package.json @vercel/blob 2.8.2). Local e2e all pass.
+- Casey must in Vercel dashboard: agentindexed → Storage → Create → Blob → Private → name agentindexed-leads → connect (Production+Preview). Optional env LEADS_ADMIN_KEY (value in my scratchpad leadskey.txt) for /api/leads viewer; else view blobs in Storage browser.
+- Then: Casey test-submits on preview URL; merge PR #2.
+
 ## Decisions made (don't re-ask)
 - 2026-11-11: HOLD the $49 upgrade outreach to ~200 submitters until email capture is in place.
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
