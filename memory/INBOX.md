@@ -70,3 +70,8 @@ Okay, let me ask you, when somebody's submitting their stuff, are they including
 ### 2026-11-11 02:30 UTC · session 5013f540
 
 Okay, let's hold off on the email upgrade. I just want to make sure everything's in place. So that we are definitely capturing emails.
+
+---
+### 2026-11-11 02:37 UTC · session 5013f540
+
+Yeah, go ahead and go to Google Drive or something instead of the Google Sheets. And Google Chrome.
