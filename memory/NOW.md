@@ -50,6 +50,10 @@ REVERSED 2026-11-11 ~03:25 UTC: Casey KEEPS Site A (ChatGPT Sites) on agentindex
 - On hold per Casey: $49 Featured upgrade email to ~200 past submitters. Offer when Casey ready.
 - Optional: add new leads to morning brief; delete Casey's TEST lead; backlink wording mismatch (site says dofollow, Stripe product says no ranking credit).
 
+## 2026-11-11 ~03:35 UTC Fable advisor
+- Only GitHub repo is caseybattle/agentindexed (Site B); Site A code lives only in ChatGPT Sites.
+- Advisor: Vercel Hobby forbids commercial → Site B needs Vercel Pro $20/mo (+spend cap) or Cloudflare Pages free (rewrite). Recommends Site B on Vercel Pro. See cro/research/2026-11-11-agentindexed-hosting-advisor.md. Awaiting Casey: A) Vercel Pro $20, B) Cloudflare free (I rebuild), C) keep ChatGPT site.
+
 ## Decisions made (don't re-ask)
 - 2026-11-11: HOLD the $49 upgrade outreach to ~200 submitters until email capture is in place.
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
