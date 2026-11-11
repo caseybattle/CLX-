@@ -40,3 +40,8 @@ Okay, so I checked the Stripe email and it looks like it was saying the Stripe w
 ### 2026-11-10 23:11 UTC · session 5013f540
 
 Oh, I'm just reading some information back. It says that both of the 99 sponsored checkouts were real visitors, but they never typed in an email or a card. So there's no one follow up with. So that's a problem. Why am I not getting any? I was like, dang, how to design a site where we can collect? That's crazy. And then it says they were open to no decision. And I feel 50 and $10:35 a.m. So that means they opened it like 45 minutes later, and then shows the price you want both times. They probably was the same person coming to the meeting again. Nothing in Gmail matches their word to sponsor checkouts like this on July 19th and September 24th. So people are getting to the checkout and stopping there. Dang, if we don't have it set up right, then we can't collect any money. Jesus. It says there's 2 cheap fixes. Golly, we gotta fix that. What the hell is going on?
+
+---
+### 2026-11-11 01:20 UTC · session 5013f540
+
+Okay, so which account needs to be relinked to Chase? Is it the Google, Gmail, or is it the Yahoo account? That's what I need to know, because I think they were okay.
