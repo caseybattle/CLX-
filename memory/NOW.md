@@ -44,6 +44,9 @@ Plan: Google Apps Script web app -> Google Sheet + email alert to Casey; edit ge
 - Casey must in Vercel dashboard: agentindexed → Storage → Create → Blob → Private → name agentindexed-leads → connect (Production+Preview). Optional env LEADS_ADMIN_KEY (value in my scratchpad leadskey.txt) for /api/leads viewer; else view blobs in Storage browser.
 - Then: Casey test-submits on preview URL; merge PR #2.
 
+## 2026-11-11 ~02:55 UTC — Vercel token saved (env CB, host api.vercel.com, proxy-injected)
+- Blob store store_NAEGD1Kt6u6vHbIk 'agentindexed-leads' private, connected to agentindexed (prod/preview/dev, BLOB_READ_WRITE_TOKEN). LEADS_ADMIN_KEY env set (value in scratchpad leadskey.txt — give Casey the leads page link). Redeploy dpl_4wxJ4YsaDm7cEnooK6Drbj6QneZo building; then verify check=1 → storage:true, POST test lead via API? (container can't reach *.vercel.app; use Vercel sandbox or Casey test), merge PR #2.
+
 ## Decisions made (don't re-ask)
 - 2026-11-11: HOLD the $49 upgrade outreach to ~200 submitters until email capture is in place.
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
