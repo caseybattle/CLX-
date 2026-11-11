@@ -41,3 +41,11 @@
 ## Update 2026-11-11: bank fixed
 Casey added Chase ••5628 manually (routing 061092387). Verified via API: default for USD, status 'new' (normal
 for a manually entered account; it becomes validated once a payout succeeds). Old tokenized ••6198 is gone.
+
+## Update 2026-11-11 02:54 UTC: email capture LIVE
+- caseybattle/agentindexed PR #2 merged (2fa3300); production agentindexed.com = dpl_351TruLdS5ZwQEKqePgYsq44itJK.
+- Pricing buttons → /submit/?plan=… → lead saved to private Vercel Blob store `agentindexed-leads`
+  (store_NAEGD1Kt6u6vHbIk) via /api/lead → then Stripe with email pre-filled.
+- Owner leads page: /api/leads?key=<LEADS_ADMIN_KEY in Vercel env> (&format=csv). Health: /api/lead?check=1.
+- Verified end-to-end with Casey's real test (featured, saved 02:52:42 UTC, landed on Stripe $49 page).
+- Webhook we_1UVC2g… disabled. Vercel API token saved on cloud env "CB" (proxy-injected for api.vercel.com).

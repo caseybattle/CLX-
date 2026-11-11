@@ -4,8 +4,7 @@
 > It is automatically re-injected after every compact / clear / resume.
 
 ## Current task
-Build AgentIndexed email capture so EVERY submit + buy click saves email (Casey 2026-11-11 02:1x: 'hold off on the email upgrade… make sure we are definitely capturing emails'). Webhook already disabled.
-Plan: Google Apps Script web app -> Google Sheet + email alert to Casey; edit gen.py (Vercel builds from it): submit form POSTs to script URL (fallback mailto if URL unset); pricing buy buttons -> /submit/?plan=featured|pro|sponsor so email is asked first, then Stripe with prefilled_email. Ship via PR on caseybattle/agentindexed.
+_none active_ — AgentIndexed email capture LIVE 2026-11-11 02:54 UTC (PR #2 merged 2fa3300, prod dpl_351TruLdS5ZwQEKqePgYsq44itJK, storage:true). Casey's test lead (featured, casbattle19@gmail.com) verified saved.
 
 ## What Casey said (verbatim-ish)
 - Honkle (Google Play): ALREADY submitted for production and access granted. -> mark done in PROJECTS.md.
@@ -46,6 +45,10 @@ Plan: Google Apps Script web app -> Google Sheet + email alert to Casey; edit ge
 
 ## 2026-11-11 ~02:55 UTC — Vercel token saved (env CB, host api.vercel.com, proxy-injected)
 - Blob store store_NAEGD1Kt6u6vHbIk 'agentindexed-leads' private, connected to agentindexed (prod/preview/dev, BLOB_READ_WRITE_TOKEN). LEADS_ADMIN_KEY env set (value in scratchpad leadskey.txt — give Casey the leads page link). Redeploy dpl_4wxJ4YsaDm7cEnooK6Drbj6QneZo building; then verify check=1 → storage:true, POST test lead via API? (container can't reach *.vercel.app; use Vercel sandbox or Casey test), merge PR #2.
+
+## Next step (AgentIndexed)
+- On hold per Casey: $49 Featured upgrade email to ~200 past submitters. Offer when Casey ready.
+- Optional: add new leads to morning brief; delete Casey's TEST lead; backlink wording mismatch (site says dofollow, Stripe product says no ranking credit).
 
 ## Decisions made (don't re-ask)
 - 2026-11-11: HOLD the $49 upgrade outreach to ~200 submitters until email capture is in place.
