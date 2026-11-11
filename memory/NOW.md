@@ -4,7 +4,7 @@
 > It is automatically re-injected after every compact / clear / resume.
 
 ## Current task
-REVERSED 2026-11-11 ~03:25 UTC: Casey KEEPS Site A (ChatGPT Sites) on agentindexed.com — chose it to avoid paying Vercel; already pays ChatGPT $20/mo. Told Casey NOT to change Namecheap DNS (or restore A @ 172.66.3.26 + 162.159.143.30, CNAME www custom-domains.chatgpt.site). Webhook stays ENABLED (Site A uses it). Email capture for Site A must be built in ChatGPT: prompt at cro/prompts/agentindexed-chatgpt-email-capture.md. Site B (Vercel) left parked; offer to remove blob store/leads page if unwanted.
+_none active_. DECIDED 2026-11-11 ~03:45 UTC: Casey KEEPS agentindexed.com on the ChatGPT site (Option C, no extra spend). No DNS change. Stripe webhook stays ENABLED. Optional for Casey: paste cro/prompts/agentindexed-chatgpt-email-capture.md into ChatGPT. Vercel Site B left parked (not on domain).
 
 ## What Casey said (verbatim-ish)
 - Honkle (Google Play): ALREADY submitted for production and access granted. -> mark done in PROJECTS.md.
@@ -55,6 +55,7 @@ REVERSED 2026-11-11 ~03:25 UTC: Casey KEEPS Site A (ChatGPT Sites) on agentindex
 - Advisor: Vercel Hobby forbids commercial → Site B needs Vercel Pro $20/mo (+spend cap) or Cloudflare Pages free (rewrite). Recommends Site B on Vercel Pro. See cro/research/2026-11-11-agentindexed-hosting-advisor.md. Awaiting Casey: A) Vercel Pro $20, B) Cloudflare free (I rebuild), C) keep ChatGPT site.
 
 ## Decisions made (don't re-ask)
+- 2026-11-11: AgentIndexed stays on ChatGPT Sites; no Vercel Pro, no Cloudflare move, no DNS change. Don't re-propose unless Casey asks.
 - 2026-11-11: HOLD the $49 upgrade outreach to ~200 submitters until email capture is in place.
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
 - PR #4: OK to merge.
