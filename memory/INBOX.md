@@ -65,3 +65,8 @@ Hey, two things left. Yeah, let's fix that. And then let's fix that first. And I
 ### 2026-11-11 02:09 UTC · session 5013f540
 
 Okay, let me ask you, when somebody's submitting their stuff, are they including their emails? Because I believe we're capturing them that way, but I guess they're not being saved. Is that correct?
+
+---
+### 2026-11-11 02:30 UTC · session 5013f540
+
+Okay, let's hold off on the email upgrade. I just want to make sure everything's in place. So that we are definitely capturing emails.
