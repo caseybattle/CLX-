@@ -75,3 +75,8 @@ Okay, let's hold off on the email upgrade. I just want to make sure everything's
 ### 2026-11-11 02:37 UTC · session 5013f540
 
 Yeah, go ahead and go to Google Drive or something instead of the Google Sheets. And Google Chrome.
+
+---
+### 2026-11-11 02:46 UTC · session 5013f540
+
+done, I created the blob store
