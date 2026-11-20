@@ -56,7 +56,8 @@ _none active_. DECIDED 2026-11-11 ~03:45 UTC: Casey KEEPS agentindexed.com on th
 
 ## Decisions made (don't re-ask)
 - 2026-11-11: AgentIndexed stays on ChatGPT Sites; no Vercel Pro, no Cloudflare move, no DNS change. Don't re-propose unless Casey asks.
-- 2026-11-11: HOLD the $49 upgrade outreach to ~200 submitters until email capture is in place.
+- 2026-11-20 brief: Gmail Sent shows ~20 AgentIndexed pay-to-list replies sent 11-19 17:59–18:01 ET by Casey → outreach hold effectively LIFTED by Casey. 0 buyers yet; SendHQ wants affiliate-for-free deal; HOL free only.
+- (superseded) 2026-11-11: HOLD the $49 upgrade outreach to ~200 submitters until email capture is in place.
 - Bash Kings: small-ramps -> main. Approved by Casey 2026-11-10.
 - PR #4: OK to merge.
 - Memory system done; PR #3 waiting on Casey to merge.
