@@ -30,6 +30,8 @@ Last updated: 2026-10-31 (initial setup — all numbers below are blank until Ca
 | 2 | | | | | | | |
 | 3 | | | | | | | |
 
+- 2026-11-21 (chief-of-staff): AgentIndexed made its first sale, $49 Featured (Sim) on 11-20. About 35 pay-to-list replies went out 11-19 to 11-20, and 1 has paid so far. The 48h check runs 11-21 18:00 ET. Before sending more, the CRO should decide whether to add a cheaper starter tier. Open: NanoParse price fix, plus 3 Claude Duet decisions (SEO pages, postal address, Vercel dashboard delete).
+
 ## Paused / killed
 
 | Project | Why | Date |
